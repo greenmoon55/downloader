@@ -48,7 +48,8 @@ void DownloadWidget::setupUi()
 // 此时开始下载
 void DownloadWidget::download()
 {
-    mManager->download(QUrl("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg"));
+    //mManager->download(QUrl("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg"));
+    mManager->download(QUrl("http://dl_dir.qq.com/qqfile/qq/QQ2012/QQ2012Beta2.exe"));
     mDownloadBtn->setEnabled(false);
     mPauseBtn->setEnabled(true);
 }

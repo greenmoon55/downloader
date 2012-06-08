@@ -31,6 +31,10 @@ void DownloadManager::download( QNetworkRequest& request)
     connect(mCurrentReply,SIGNAL(finished()),this,SLOT(finished()));
     connect(mCurrentReply,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
     connect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+
+    // 开始计时
+    time.start();
+    qDebug() << time.toString();
 }
 
 void DownloadManager::pause()
@@ -90,6 +94,7 @@ void DownloadManager::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
     int percentage = ((mDownloadSizeAtPause+bytesReceived) * 100 )/ (mDownloadSizeAtPause+bytesTotal);
     qDebug() << percentage;
     emit progress(percentage);
+    qDebug() << bytesReceived / (double)time.elapsed() << "KB/s" << endl;
 }
 
 void DownloadManager::error(QNetworkReply::NetworkError code)

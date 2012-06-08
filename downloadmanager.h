@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QFile>
+#include <QTime>
 
 class DownloadManager : public QObject
 {
@@ -43,6 +44,8 @@ private:
     QNetworkReply* mCurrentReply;
     QFile* mFile;
     int mDownloadSizeAtPause;
+
+    QTime time;
 };
 
 #endif // DOWNLOADMANAGER_H
