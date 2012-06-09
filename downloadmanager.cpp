@@ -13,6 +13,8 @@ DownloadManager::DownloadManager(QObject *parent) :
 void DownloadManager::download( QUrl url)
 {
     qDebug() << "download: URL=" <<url.toString();
+    QFileInfo fileInfo(url.toString());
+    qDebug() << "filename: " << fileInfo.fileName();
 
     mDownloadSizeAtPause =0;
     mCurrentRequest = QNetworkRequest(url);

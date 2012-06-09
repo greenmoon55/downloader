@@ -6,6 +6,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QFile>
+#include <QFileInfo>
 #include <QTime>
 
 class DownloadManager : public QObject
