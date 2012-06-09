@@ -44,7 +44,7 @@ private:
     QNetworkReply* mCurrentReply;
     QFile* mFile;
     int mDownloadSizeAtPause;
-
+    int bytesWrittenToFile;
     QTime time;
 };
 

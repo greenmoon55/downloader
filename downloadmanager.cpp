@@ -19,6 +19,8 @@ void DownloadManager::download( QUrl url)
     mFile = new QFile("download.part");
     mFile->open(QIODevice::ReadWrite);
 
+    bytesWrittenToFile = 0;
+
     download(mCurrentRequest);
 }
 
@@ -31,6 +33,8 @@ void DownloadManager::download( QNetworkRequest& request)
     connect(mCurrentReply,SIGNAL(finished()),this,SLOT(finished()));
     connect(mCurrentReply,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
     connect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+
+    //connect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
     // 开始计时
     time.start();
@@ -49,6 +53,8 @@ void DownloadManager::pause()
     disconnect(mCurrentReply,SIGNAL(finished()),this,SLOT(finished()));
     disconnect(mCurrentReply,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
     disconnect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+
+    //disconnect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
     mCurrentReply->abort();
     mFile->write(mCurrentReply->readAll());
@@ -75,8 +81,11 @@ void DownloadManager::resume()
 void DownloadManager::finished()
 {
     qDebug() << "finished";
+    mFile->write(mCurrentReply->readAll());
     mFile->close();
-    mFile->rename("download.part","download.complete");
+    if (!mFile->rename("download.part","download.complete")) {
+        qDebug() << "rename error" << endl;
+    }
     mFile = 0;
 
     mCurrentReply->deleteLater();
@@ -89,8 +98,14 @@ void DownloadManager::finished()
 void DownloadManager::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
     qDebug() << "Download Progress: Received=" << mDownloadSizeAtPause+bytesReceived <<": Total=" << mDownloadSizeAtPause+bytesTotal;
-
-    mFile->write( mCurrentReply->readAll() );
+    if (mDownloadSizeAtPause+bytesReceived - bytesWrittenToFile > 500000)
+    {
+        mFile->write(mCurrentReply->readAll());
+        bytesWrittenToFile = mFile->size();
+        qDebug() << "write" << endl;
+    }
+    else qDebug() << "continue" << endl;
+   // qDebug() << mFile->size() << endl;
     int percentage = ((mDownloadSizeAtPause+bytesReceived) * 100 )/ (mDownloadSizeAtPause+bytesTotal);
     qDebug() << percentage;
     emit progress(percentage);
