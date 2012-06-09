@@ -46,6 +46,7 @@ private:
     int mDownloadSizeAtPause;
     int bytesWrittenToFile;
     QTime time;
+    QTime shortTime;
 };
 
 #endif // DOWNLOADMANAGER_H

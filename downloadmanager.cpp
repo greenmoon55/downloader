@@ -38,6 +38,7 @@ void DownloadManager::download( QNetworkRequest& request)
 
     // 开始计时
     time.start();
+    shortTime.start();
     qDebug() << time.toString();
 }
 
@@ -56,8 +57,9 @@ void DownloadManager::pause()
 
     //disconnect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
-    mCurrentReply->abort();
     mFile->write(mCurrentReply->readAll());
+    qDebug() << mFile->size();
+    mCurrentReply->abort();    
 
     mCurrentReply->deleteLater(); // 我加的
     mCurrentReply = 0;
@@ -97,7 +99,8 @@ void DownloadManager::finished()
 // bytesTotal indicates the total number of bytes expected to be downloaded
 void DownloadManager::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
-    qDebug() << "Download Progress: Received=" << mDownloadSizeAtPause+bytesReceived <<": Total=" << mDownloadSizeAtPause+bytesTotal;
+    //qDebug() << "Download Progress: Received=" << mDownloadSizeAtPause+bytesReceived <<": Total=" << mDownloadSizeAtPause+bytesTotal;
+    /*
     if (mDownloadSizeAtPause+bytesReceived - bytesWrittenToFile > 500000)
     {
         mFile->write(mCurrentReply->readAll());
@@ -105,11 +108,21 @@ void DownloadManager::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
         qDebug() << "write" << endl;
     }
     else qDebug() << "continue" << endl;
+    */
    // qDebug() << mFile->size() << endl;
+
+    if (shortTime.elapsed() > 3000) {
+        qDebug() << (mDownloadSizeAtPause + bytesReceived - mFile->size()) / (double)shortTime.elapsed() << "KB/s" <<  endl;
+        mFile->write(mCurrentReply->readAll());
+        bytesWrittenToFile = mFile->size();
+        qDebug() << "write" << endl;
+        shortTime.start();
+    }
+    //else qDebug() << "continue" << endl;
     int percentage = ((mDownloadSizeAtPause+bytesReceived) * 100 )/ (mDownloadSizeAtPause+bytesTotal);
-    qDebug() << percentage;
+    //qDebug() << percentage;
     emit progress(percentage);
-    qDebug() << bytesReceived / (double)time.elapsed() << "KB/s" << endl;
+    // qDebug() << bytesReceived / (double)time.elapsed() << "KB/s" << endl;
 }
 
 void DownloadManager::error(QNetworkReply::NetworkError code)
