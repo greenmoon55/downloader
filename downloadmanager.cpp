@@ -33,6 +33,7 @@ void DownloadManager::download( QNetworkRequest& request)
     connect(mCurrentReply,SIGNAL(finished()),this,SLOT(finished()));
     connect(mCurrentReply,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
     connect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+    connect(mCurrentReply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
 
     //connect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
@@ -55,6 +56,7 @@ void DownloadManager::pause()
     disconnect(mCurrentReply,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(downloadProgress(qint64,qint64)));
     disconnect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
 
+    disconnect(mCurrentReply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged())); // ???
     //disconnect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
     mFile->write(mCurrentReply->readAll());
@@ -128,4 +130,9 @@ void DownloadManager::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 void DownloadManager::error(QNetworkReply::NetworkError code)
 {
     qDebug() << "Error:"<<code;
+}
+
+void DownloadManager::metaDataChanged()
+{
+    qDebug() << "File size: " << QString(mCurrentReply->rawHeader("Content-Length")) << endl;
 }
