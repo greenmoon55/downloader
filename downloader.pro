@@ -15,9 +15,11 @@ TEMPLATE = app
 
 SOURCES += \
     main.cpp \
-    downloadwidget.cpp \
-    downloadmanager.cpp
+    downloadmanager.cpp \
+    widget.cpp \
+    task.cpp
 
 HEADERS  += \
-    downloadwidget.h \
-    downloadmanager.h
+    downloadmanager.h \
+    widget.h \
+    task.h

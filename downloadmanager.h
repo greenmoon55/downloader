@@ -14,41 +14,18 @@ class DownloadManager : public QObject
     Q_OBJECT
 public:
     explicit DownloadManager(QObject *parent = 0);
+    QNetworkReply* newDownload(QNetworkRequest request);
 
 signals:
-    void downloadComplete();
-
-    void progress( int percentage);
 
 public slots:
 
-    void download(QUrl url);
-
-    void pause();
-
-    void resume();
 
 private slots:
 
-    void download( QNetworkRequest& request );
-
-    void finished();
-
-    void downloadProgress ( qint64 bytesReceived, qint64 bytesTotal );
-
-    void error ( QNetworkReply::NetworkError code );
-    void metaDataChanged();
 
 private:
-
-    QNetworkAccessManager* mManager;
-    QNetworkRequest mCurrentRequest;
-    QNetworkReply* mCurrentReply;
-    QFile* mFile;
-    int mDownloadSizeAtPause;
-    int bytesWrittenToFile;
-    QTime time;
-    QTime shortTime;
+    QNetworkAccessManager* manager;
 };
 
 #endif // DOWNLOADMANAGER_H

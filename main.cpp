@@ -1,12 +1,11 @@
-#include <QApplication>
-
-#include "downloadwidget.h"
+#include <QtGui/QApplication>
+#include "widget.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    Widget w;
+    w.show();
 
-    DownloadWidget wid;
-    wid.show();
     return a.exec();
 }
