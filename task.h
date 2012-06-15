@@ -20,6 +20,7 @@ private:
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
 
+
 private slots:
     void downloadProgress (qint64 bytesReceived, qint64 bytesTotal);
     void startDownload();

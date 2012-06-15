@@ -5,8 +5,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QList>
 #include "task.h"
 #include "newTaskDialog.h"
+#include "QDebug"
 
 class Widget : public QWidget
 {
@@ -14,6 +16,7 @@ class Widget : public QWidget
 private:
     QVBoxLayout *mainLayout;
     DownloadManager *dm;
+    void closeEvent(QCloseEvent *event);
 public:
     Widget(QWidget *parent = 0);
     ~Widget();

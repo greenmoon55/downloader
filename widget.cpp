@@ -26,3 +26,17 @@ void Widget::addTask()
     mainLayout->addWidget(file);
     this->setLayout(mainLayout);
 }
+
+void Widget::closeEvent(QCloseEvent *event)
+{
+    QList<Task *> tasks = this->findChildren<Task *>();
+    qDebug() << tasks.length();
+    /*
+    QList<Task *>::iterator i;
+     for (i = tasks.begin(); i != tasks.end(); ++i)
+     {
+         (*i)->toString();
+     }
+     */
+    qDebug() << "CloseEvent";
+}
