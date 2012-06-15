@@ -17,9 +17,11 @@ SOURCES += \
     main.cpp \
     downloadmanager.cpp \
     widget.cpp \
-    task.cpp
+    task.cpp \
+    newTaskDialog.cpp
 
 HEADERS  += \
     downloadmanager.h \
     widget.h \
-    task.h
+    task.h \
+    newTaskDialog.h

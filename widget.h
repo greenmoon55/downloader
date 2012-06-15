@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include "task.h"
+#include "newTaskDialog.h"
 
 class Widget : public QWidget
 {
