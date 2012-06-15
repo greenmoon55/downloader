@@ -18,7 +18,7 @@ private:
     QFile *file;
     QNetworkReply* reply;
 public:
-    Task(DownloadManager*, QWidget *parent = 0);
+    Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
 
 private slots:
     void downloadProgress (qint64 bytesReceived, qint64 bytesTotal);

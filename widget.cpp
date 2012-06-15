@@ -21,7 +21,8 @@ void Widget::addTask()
     newTaskDialog dlg(this);
     //Shows the dialog as a modal dialog, blocking until the user closes it.
     dlg.exec();
-    Task *file = new Task(dm, this);
+    qDebug() << dlg.url << dlg.saveFileName;
+    Task *file = new Task(dm, dlg.url, dlg.saveFileName, this);
     mainLayout->addWidget(file);
     this->setLayout(mainLayout);
 }

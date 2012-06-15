@@ -1,7 +1,7 @@
 #include "task.h"
 #include <QDebug>
 
-Task::Task(DownloadManager *downloadManager, QWidget *parent)
+Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager) // right?
 {
     startButton = new QPushButton("Start", this);
@@ -17,13 +17,14 @@ Task::Task(DownloadManager *downloadManager, QWidget *parent)
     stopButton->setEnabled(false);
     this->setLayout(fileLayout);
     qDebug() << "file init"<< endl;
-    file = new QFile("download.part");
+    file = new QFile(path);
     file->open(QIODevice::ReadWrite);
+    this->url = url;
 }
 
 void Task::startDownload()
 {
-    QUrl url("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg");
+    //QUrl url("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg");
     qDebug()<<"startDownload"<<endl;
     qint64 size = file->size();
     qDebug() <<"filesize"<<size << endl;

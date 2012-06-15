@@ -8,11 +8,11 @@
 #include <QPushButton>
 #include <QStringList>
 #include <QSpinBox>
+#include <QUrl>
 
-#define OK true
-#define CANCEL false
+#include <QDebug>
 
-class newTaskDialog : public QDialog
+class newTaskDialog: public QDialog
 {
     Q_OBJECT
 public:
@@ -28,6 +28,8 @@ public:
     QPushButton *cancel;
     QStringList saveDir;
     bool reply;
+    QString url, saveFileName;
+    QLineEdit *saveFileNameEdit;
 private slots:
     void on_Browse_clicked();
     void on_ok_clicked();

@@ -37,7 +37,10 @@ newTaskDialog::newTaskDialog(QWidget *parent): QDialog(parent)
     mainLayout->addLayout(second);
     mainLayout->addLayout(third);
     mainLayout->addLayout(fouth);
+    saveFileNameEdit = new QLineEdit(this);
     this->setWindowTitle(tr("new"));
+
+    mainLayout->addWidget(saveFileNameEdit);
     setLayout(mainLayout);
     this->savePathBox->setEditable(true);
     this->savePathBox->setEditText(QFSFileEngine::homePath());
@@ -60,11 +63,13 @@ void newTaskDialog::on_Browse_clicked()
 }
 void newTaskDialog::on_ok_clicked()
 {
-    reply=OK;
+    //reply=OK;
+    url = urlLine->displayText();
+    saveFileName = saveFileNameEdit->displayText();
     this->close();
 }
 void newTaskDialog::on_cancel_clicked()
 {
-    reply=CANCEL;
+    //reply=CANCEL;
     this->close();
 }
