@@ -1,5 +1,9 @@
 #include "widget.h"
 #include "QDebug"
+#include <QMessageBox>
+#include <QFileDialog>
+#include "base64.h"
+
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -21,10 +25,33 @@ void Widget::addTask()
     newTaskDialog dlg(this);
     //Shows the dialog as a modal dialog, blocking until the user closes it.
     dlg.exec();
-    qDebug() << dlg.url << dlg.saveFileName;
-    Task *file = new Task(dm, dlg.url, dlg.saveFileName, this);
-    mainLayout->addWidget(file);
-    this->setLayout(mainLayout);
+       QString url=dlg.urlLine->text();
+   QString aa=url.split("://").first();
+   if(dlg.reply==OK)
+    {
+        if(aa=="thunder" || aa=="Thunder")
+            url=base64::thunderURL(url);
+        if(aa=="flashget")
+            url=base64::flashgetURL(url);
+        if(aa=="qqdl")
+            url=base64::qqdlURL(url);
+    }
+    if(dlg.reply==OK)
+    {
+        if(url.split("://").first()=="http")
+        {
+           qDebug() << dlg.url << dlg.saveFileName;
+           Task *file = new Task(dm, dlg.url, dlg.saveFileName, this);
+           mainLayout->addWidget(file);
+           this->setLayout(mainLayout);
+        }
+        else
+        {
+            QMessageBox m;
+            m.setText("Sorry~We can't download this kind of file...T^T    ");
+            m.exec();
+        }
+    }
 }
 
 void Widget::closeEvent(QCloseEvent *event)
