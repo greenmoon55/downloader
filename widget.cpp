@@ -5,13 +5,13 @@
 
 QDataStream &operator<<(QDataStream &out, const TaskInfo &obj)
 {
-     out << obj.url << obj.path << obj.fileName << obj.size << obj.downloadedSize;
+     out << obj.url << obj.path << obj.fileName << obj.size << obj.fileSize;
      return out;
 }
 
 QDataStream &operator>>(QDataStream &in, TaskInfo &obj)
 {
-    in >> obj.url >> obj.path >> obj.fileName >> obj.size >> obj.downloadedSize;
+    in >> obj.url >> obj.path >> obj.fileName >> obj.size >> obj.fileSize;
     return in;
 }
 
@@ -34,9 +34,9 @@ Widget::Widget(QWidget *parent)
         {
             qDebug() << test.length();
             TaskInfo contact = test[0].value<TaskInfo>();
-                    qDebug() << contact.size << contact.downloadedSize;
+                    qDebug() << contact.size << contact.fileSize;
             contact = test[1].value<TaskInfo>();
-            qDebug() << contact.size << contact.downloadedSize;
+            qDebug() << contact.size << contact.fileSize;
         }
     }
 

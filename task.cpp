@@ -6,10 +6,12 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
     startButton = new QPushButton("Start", this);
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
+    progressBar = new QProgressBar(this);
     QHBoxLayout *fileLayout = new QHBoxLayout;
     fileLayout->addWidget(startButton);
     fileLayout->addWidget(stopButton);
     fileLayout->addWidget(removeButton);
+    fileLayout->addWidget(progressBar);
     connect(startButton, SIGNAL(clicked()), this, SLOT(startDownload()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
     connect(removeButton, SIGNAL(clicked()), this, SLOT(destructor()));
@@ -25,19 +27,21 @@ void Task::startDownload()
 {
     //QUrl url("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg");
     qDebug()<<"startDownload"<<endl;
-    qint64 size = file->size();
-    qDebug() <<"filesize"<<size << endl;
+    this->fileSize = file->size();
+    //qint64 size = file->size();
+    qDebug() <<"filesize"<<fileSize << endl;
 
     // Http Header 里放上范围信息，http://en.wikipedia.org/wiki/List_of_HTTP_header_fields
     // Start from 0
     // 问题: 为什么用QByteArray，而不用QString...
-    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number(size) + "-";
+    QByteArray rangeHeaderValue = "bytes=" + QByteArray::number(fileSize) + "-";
     QNetworkRequest request(url);
     request.setRawHeader("Range",rangeHeaderValue);
     reply = downloadManager->newDownload(request);
 
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
-    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
+    connect(reply, SIGNAL(finished()), this, SLOT(finished()));
     shortTime.start();
     startButton->setEnabled(false);
     stopButton->setEnabled(true);
@@ -50,8 +54,9 @@ void Task::stopDownload()
 
     // disconnect the signal/slot so we don't get any error signal and mess with our error handling code
     // and most importantly it write data to our IODevice here its file which is storing downloaded data.
+    disconnectSignals();
     //disconnect(reply,SIGNAL(finished()),this,SLOT(finished()));
-    disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+    //disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
     //disconnect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
 
     //disconnect(mCurrentReply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged())); // ???
@@ -65,7 +70,7 @@ void Task::stopDownload()
     startButton->setEnabled(true);
     stopButton->setEnabled(false);
 }
-void Task::downloadProgress ( qint64 bytesReceived, qint64 bytesTotal )
+void Task::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
     qDebug()<<"Task::downloadProgress";
     qDebug() << "Download Progress: Received=" <<bytesReceived <<": Total=" << bytesTotal;
@@ -78,8 +83,9 @@ void Task::downloadProgress ( qint64 bytesReceived, qint64 bytesTotal )
         shortTime.start();
     }
     //else qDebug() << "continue" << endl;
-    if (bytesTotal == 0) return;
-    int percentage = ((bytesReceived) * 100 )/ (bytesTotal);
+    if (bytesTotal + fileSize == 0) return; // Avoid "divide by 0"
+    int percentage = ((bytesReceived + fileSize) * 100 )/ (bytesTotal + fileSize);
+    this->progressBar->setValue(percentage);
     qDebug() << percentage;
     return;
 }
@@ -107,4 +113,10 @@ void Task::error(QNetworkReply::NetworkError code)
     this->disconnectSignals();
     reply->deleteLater();
     qDebug() << reply->errorString();
+}
+
+void Task::finished()
+{
+    qDebug() << "finished";
+    this->disconnectSignals();
 }
