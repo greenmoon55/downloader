@@ -22,6 +22,7 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
     file = new QFile(path);
     file->open(QIODevice::ReadWrite);
     this->url = url;
+    this->totalSize = 0;
 }
 
 void Task::startDownload()
@@ -132,7 +133,9 @@ void Task::finished()
 void Task::metaDataChanged()
 {
     disconnect(reply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
-    int contentLength = reply->rawHeader("Content-Length").toInt();
+    qDebug() << reply->rawHeader("Content-Length");
+    int contentLength = reply->rawHeader("Content-Length").toLongLong();
+    qDebug() << "length" << contentLength;
     if (this->totalSize == 0) this->totalSize = contentLength;
     else if (this->totalSize != contentLength)
     {

@@ -58,23 +58,34 @@ void Widget::addTask()
     newTaskDialog dlg(this);
     //Shows the dialog as a modal dialog, blocking until the user closes it.
     dlg.exec();
-   QString url=dlg.urlLine->text();
-   QString aa=url.split("://").first();
-   if(dlg.reply==true)
+    QString url =dlg.urlLine->text();
+    QStringList list = url.split("://");
+    if (list.size() < 2)
     {
-        if(aa=="thunder" || aa=="Thunder")
-            url=base64::thunderURL(url);
-        if(aa=="flashget")
-            url=base64::flashgetURL(url);
-        if(aa=="qqdl")
-            url=base64::qqdlURL(url);
+        qDebug() << "listsize";
+        QMessageBox::warning(this, tr("下载"),
+                                        tr("抱歉，无法识别您的下载地址"),
+                                        QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    QString protocol = list.first(); // 如果不存在则返回原string
+    qDebug() << protocol;
+    QString addr = list.at(1);
+    if(dlg.reply==true)
+    {
+        if(protocol=="thunder" || protocol=="Thunder")
+            url=base64::thunderURL(addr);
+        if(protocol=="flashget")
+            url=base64::flashgetURL(addr);
+        if(protocol=="qqdl")
+            url=base64::qqdlURL(addr);
     }
     if(dlg.reply==true)
     {
         //if(url.split("://").first()=="http")
         {
-           qDebug() << dlg.url << dlg.saveFile;
-           Task *file = new Task(dm, dlg.url, dlg.saveFile, this);
+           qDebug() << url << dlg.saveFile;
+           Task *file = new Task(dm, url, dlg.saveFile, this);
            mainLayout->addWidget(file);
            this->setLayout(mainLayout);
         }

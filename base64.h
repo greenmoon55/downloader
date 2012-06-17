@@ -2,6 +2,8 @@
 #define BASE64_H
 
 #include <QString>
+#include <QStringList>
+#include <QDebug>
 
 class base64
 {
