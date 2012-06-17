@@ -5,7 +5,15 @@
 #include <QHBoxLayout>
 #include <QUrl>
 #include <QTime>
+#include <QMetaType>
 #include "downloadmanager.h"
+
+struct TaskInfo
+{
+    QString url, path, fileName;
+    int size, downloadedSize;
+};
+Q_DECLARE_METATYPE(TaskInfo)
 
 class Task: public QWidget
 {
@@ -19,6 +27,7 @@ private:
     QNetworkReply* reply;
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
+    TaskInfo getTaskInfo();
 
 
 private slots:

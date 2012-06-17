@@ -6,9 +6,11 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QList>
+#include <QDebug>
+#include <QSettings>
+#include <QMetaType>
 #include "task.h"
 #include "newTaskDialog.h"
-#include "QDebug"
 
 class Widget : public QWidget
 {

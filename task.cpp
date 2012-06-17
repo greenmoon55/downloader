@@ -88,3 +88,9 @@ void Task::destructor()
     qDebug() << "deleteLater";
     this->deleteLater();
 }
+
+TaskInfo Task::getTaskInfo()
+{
+    TaskInfo info = {"ac","bc","cc",0,1};
+    return info;
+}
