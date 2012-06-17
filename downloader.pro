@@ -18,10 +18,12 @@ SOURCES += \
     downloadmanager.cpp \
     widget.cpp \
     task.cpp \
-    newTaskDialog.cpp
+    newTaskDialog.cpp \
+    base64.cpp
 
 HEADERS  += \
     downloadmanager.h \
     widget.h \
     task.h \
-    newTaskDialog.h
+    newTaskDialog.h \
+    base64.h
