@@ -27,7 +27,8 @@ public:
     QPushButton *cancel;
     QStringList saveDir;
     bool reply;
-    QString url, saveFileName;
+    QString url, saveFileName, saveDirectory;
+    QString saveFile; // 目录+文件名
     QLineEdit *saveFileNameEdit;
 private slots:
     void on_Browse_clicked();

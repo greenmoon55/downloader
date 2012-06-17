@@ -66,6 +66,15 @@ void newTaskDialog::on_ok_clicked()
     reply=true;
     url = urlLine->displayText();
     saveFileName = saveFileNameEdit->displayText();
+    saveDirectory = savePathBox->currentText();
+    saveFile = saveDirectory + "/" + saveFileName;
+    qDebug() << saveFile;
+    if (QFile::exists(saveFile))
+    {
+        qDebug() << "file exists";
+        return;
+    }
+    else qDebug() << "not exist";
     this->close();
 }
 void newTaskDialog::on_cancel_clicked()

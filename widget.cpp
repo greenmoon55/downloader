@@ -73,8 +73,8 @@ void Widget::addTask()
     {
         //if(url.split("://").first()=="http")
         {
-           qDebug() << dlg.url << dlg.saveFileName;
-           Task *file = new Task(dm, dlg.url, dlg.saveFileName, this);
+           qDebug() << dlg.url << dlg.saveFile;
+           Task *file = new Task(dm, dlg.url, dlg.saveFile, this);
            mainLayout->addWidget(file);
            this->setLayout(mainLayout);
         }

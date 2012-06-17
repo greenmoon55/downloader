@@ -55,12 +55,7 @@ void Task::stopDownload()
     // disconnect the signal/slot so we don't get any error signal and mess with our error handling code
     // and most importantly it write data to our IODevice here its file which is storing downloaded data.
     disconnectSignals();
-    //disconnect(reply,SIGNAL(finished()),this,SLOT(finished()));
-    //disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
-    //disconnect(mCurrentReply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
-
     //disconnect(mCurrentReply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged())); // ???
-    //disconnect(mCurrentReply, SIGNAL(readyRead()), this, SLOT(writeToFile()));
 
     file->write(reply->readAll());
     qDebug() <<"filesize"<<file->size() << endl;
@@ -74,6 +69,14 @@ void Task::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
     qDebug()<<"Task::downloadProgress";
     qDebug() << "Download Progress: Received=" <<bytesReceived <<": Total=" << bytesTotal;
+    qDebug() << bytesTotal  << fileSize << bytesTotal+fileSize;
+    qDebug() << totalSize;
+    if (bytesTotal + fileSize != totalSize)
+    {
+        qDebug() << "size error";
+    }
+    else qDebug() << "size OK";
+
     // 每三秒写一次文件
     if (shortTime.elapsed() > 3000) {
         //qDebug() << (mDownloadSizeAtPause + bytesReceived - mFile->size()) / (double)shortTime.elapsed() << "KB/s" <<  endl;
@@ -117,6 +120,9 @@ void Task::error(QNetworkReply::NetworkError code)
 
 void Task::finished()
 {
+    startButton->setEnabled(false);
+    stopButton->setEnabled(false);
     qDebug() << "finished";
-    this->disconnectSignals();
+    file->write(reply->readAll()); // 不能省略
+    this->disconnectSignals();    
 }
