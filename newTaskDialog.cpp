@@ -63,13 +63,13 @@ void newTaskDialog::on_Browse_clicked()
 }
 void newTaskDialog::on_ok_clicked()
 {
-    reply=OK;
+    reply=true;
     url = urlLine->displayText();
     saveFileName = saveFileNameEdit->displayText();
     this->close();
 }
 void newTaskDialog::on_cancel_clicked()
 {
-    reply=CANCEL;
+    reply=false;
     this->close();
 }

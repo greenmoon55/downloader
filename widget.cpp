@@ -1,7 +1,5 @@
 #include "widget.h"
 #include "QDebug"
-#include <QMessageBox>
-#include <QFileDialog>
 #include "base64.h"
 
 
@@ -32,11 +30,14 @@ Widget::Widget(QWidget *parent)
     if (final.isValid())
     {
         QList<QVariant> test = final.toList();
-        qDebug() << test.length();
-        TaskInfo contact = test[0].value<TaskInfo>();
-                qDebug() << contact.size << contact.downloadedSize;
-        contact = test[1].value<TaskInfo>();
-        qDebug() << contact.size << contact.downloadedSize;
+        if (test.length()>2)
+        {
+            qDebug() << test.length();
+            TaskInfo contact = test[0].value<TaskInfo>();
+                    qDebug() << contact.size << contact.downloadedSize;
+            contact = test[1].value<TaskInfo>();
+            qDebug() << contact.size << contact.downloadedSize;
+        }
     }
 
 
@@ -57,9 +58,9 @@ void Widget::addTask()
     newTaskDialog dlg(this);
     //Shows the dialog as a modal dialog, blocking until the user closes it.
     dlg.exec();
-       QString url=dlg.urlLine->text();
+   QString url=dlg.urlLine->text();
    QString aa=url.split("://").first();
-   if(dlg.reply==OK)
+   if(dlg.reply==true)
     {
         if(aa=="thunder" || aa=="Thunder")
             url=base64::thunderURL(url);
@@ -68,25 +69,25 @@ void Widget::addTask()
         if(aa=="qqdl")
             url=base64::qqdlURL(url);
     }
-    if(dlg.reply==OK)
+    if(dlg.reply==true)
     {
-        if(url.split("://").first()=="http")
+        //if(url.split("://").first()=="http")
         {
            qDebug() << dlg.url << dlg.saveFileName;
            Task *file = new Task(dm, dlg.url, dlg.saveFileName, this);
            mainLayout->addWidget(file);
            this->setLayout(mainLayout);
         }
+        /*
         else
         {
             QMessageBox m;
             m.setText("Sorry~We can't download this kind of file...T^T    ");
             m.exec();
         }
+        */
     }
 }
-
-
 
 void Widget::closeEvent(QCloseEvent *event)
 {

@@ -10,8 +10,6 @@
 #include <QSpinBox>
 #include <QUrl>
 #include <QDebug>
-#define OK true
-#define CANCEL false
 
 class newTaskDialog: public QDialog
 {

@@ -6,6 +6,8 @@
 #include <QUrl>
 #include <QTime>
 #include <QMetaType>
+#include <QIODevice>
+#include <QDebug>
 #include "downloadmanager.h"
 
 struct TaskInfo
@@ -25,6 +27,7 @@ private:
     QUrl url;
     QFile *file;
     QNetworkReply* reply;
+    void disconnectSignals();
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
     TaskInfo getTaskInfo();
@@ -35,6 +38,7 @@ private slots:
     void startDownload();
     void stopDownload();
     void destructor();
+    void error(QNetworkReply::NetworkError code);
 };
 
 #endif // FILE_H

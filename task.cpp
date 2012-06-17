@@ -1,5 +1,4 @@
 #include "task.h"
-#include <QDebug>
 
 Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager) // right?
@@ -37,7 +36,8 @@ void Task::startDownload()
     request.setRawHeader("Range",rangeHeaderValue);
     reply = downloadManager->newDownload(request);
 
-    connect(reply,SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
     shortTime.start();
     startButton->setEnabled(false);
     stopButton->setEnabled(true);
@@ -78,6 +78,7 @@ void Task::downloadProgress ( qint64 bytesReceived, qint64 bytesTotal )
         shortTime.start();
     }
     //else qDebug() << "continue" << endl;
+    if (bytesTotal == 0) return;
     int percentage = ((bytesReceived) * 100 )/ (bytesTotal);
     qDebug() << percentage;
     return;
@@ -93,4 +94,17 @@ TaskInfo Task::getTaskInfo()
 {
     TaskInfo info = {"ac","bc","cc",0,1};
     return info;
+}
+
+void Task::disconnectSignals()
+{
+    disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
+    disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+}
+
+void Task::error(QNetworkReply::NetworkError code)
+{
+    this->disconnectSignals();
+    reply->deleteLater();
+    qDebug() << reply->errorString();
 }

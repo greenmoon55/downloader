@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QSettings>
 #include <QMetaType>
+#include <QMessageBox>
+#include <QFileDialog>
 #include "task.h"
 #include "newTaskDialog.h"
 
