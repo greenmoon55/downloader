@@ -1,5 +1,6 @@
 #include "task.h"
 
+// 这个参数应该加个totalSize
 Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager) // right?
 {
@@ -39,6 +40,7 @@ void Task::startDownload()
     request.setRawHeader("Range",rangeHeaderValue);
     reply = downloadManager->newDownload(request);
 
+    connect(reply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
     connect(reply, SIGNAL(finished()), this, SLOT(finished()));
@@ -125,4 +127,18 @@ void Task::finished()
     qDebug() << "finished";
     file->write(reply->readAll()); // 不能省略
     this->disconnectSignals();    
+}
+
+void Task::metaDataChanged()
+{
+    disconnect(reply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
+    int contentLength = reply->rawHeader("Content-Length").toInt();
+    if (this->totalSize == 0) this->totalSize = contentLength;
+    else if (this->totalSize != contentLength)
+    {
+        disconnectSignals();
+        reply->deleteLater();
+        // 服务器文件已改变，不能继续下载。。
+    }
+    qDebug() << "metaDataChanged" << totalSize;
 }

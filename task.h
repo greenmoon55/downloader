@@ -43,6 +43,7 @@ private slots:
     void destructor();
     void error(QNetworkReply::NetworkError code);
     void finished();
+    void metaDataChanged();
 };
 
 #endif // FILE_H
