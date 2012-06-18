@@ -13,8 +13,8 @@
 
 struct TaskInfo
 {
-    QString url, path, fileName;
-    int size, fileSize;
+    QString url, file;
+    qint64 fileSize, totalSize;
 };
 Q_DECLARE_METATYPE(TaskInfo)
 
@@ -33,6 +33,7 @@ private:
     void disconnectSignals();
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
+    Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);
     TaskInfo getTaskInfo();
 
 

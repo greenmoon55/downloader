@@ -25,6 +25,32 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
     this->totalSize = 0;
 }
 
+Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent)
+    :QWidget(parent), downloadManager(downloadManager), totalSize(0)
+{
+    startButton = new QPushButton("Start", this);
+    stopButton = new QPushButton("Stop", this);
+    removeButton = new QPushButton("Remove", this);
+    progressBar = new QProgressBar(this);
+    QHBoxLayout *fileLayout = new QHBoxLayout;
+    fileLayout->addWidget(startButton);
+    fileLayout->addWidget(stopButton);
+    fileLayout->addWidget(removeButton);
+    fileLayout->addWidget(progressBar);
+    connect(startButton, SIGNAL(clicked()), this, SLOT(startDownload()));
+    connect(stopButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
+    connect(removeButton, SIGNAL(clicked()), this, SLOT(destructor()));
+    stopButton->setEnabled(false);
+    this->setLayout(fileLayout);
+    qDebug() << "file init"<< endl;
+    file = new QFile(taskInfo->file);
+    file->open(QIODevice::ReadWrite);
+    this->url = taskInfo->url;
+    this->fileSize = taskInfo->fileSize;
+    this->totalSize = taskInfo->totalSize;
+    qDebug() << taskInfo->file << taskInfo->url << taskInfo->fileSize << taskInfo->totalSize;
+}
+
 void Task::startDownload()
 {
     //QUrl url("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg");
@@ -72,16 +98,12 @@ void Task::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
     qDebug()<<"Task::downloadProgress";
     qDebug() << "Download Progress: Received=" <<bytesReceived <<": Total=" << bytesTotal;
-    qDebug() << bytesTotal  << fileSize << bytesTotal+fileSize;
-    qDebug() << totalSize;
-    if (bytesTotal + fileSize != totalSize)
-    {
-        qDebug() << "size error";
-    }
-    else qDebug() << "size OK";
+    qDebug() << "fileSize" << file->size();
+    qDebug() << "origionalfileSize + Received" << this->fileSize + bytesReceived;
+    qDebug() << "totalSize" << this->totalSize;
 
     // 每三秒写一次文件
-    if (shortTime.elapsed() > 3000) {
+    if (shortTime.elapsed() > 1000) {
         //qDebug() << (mDownloadSizeAtPause + bytesReceived - mFile->size()) / (double)shortTime.elapsed() << "KB/s" <<  endl;
         file->write(reply->readAll());
         //bytesWrittenToFile = mFile->size();
@@ -104,7 +126,13 @@ void Task::destructor()
 
 TaskInfo Task::getTaskInfo()
 {
-    TaskInfo info = {"ac","bc","cc",0,1};
+    TaskInfo info;
+    QFile taskFile(file);
+    QFileInfo fileInfo(taskFile);
+    info.file = fileInfo.absoluteFilePath();
+    info.fileSize = file->size();
+    info.totalSize = this->totalSize;
+    info.url = this->url.toString();
     return info;
 }
 
