@@ -56,6 +56,7 @@ void Widget::addTask()
         Task *task = new Task(dm, dlg.url, dlg.saveFile, this);
         mainLayout->addWidget(task);
     }
+    mainLayout->addStretch();
 }
 
 void Widget::closeEvent(QCloseEvent *event)
