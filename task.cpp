@@ -20,7 +20,8 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
     this->setLayout(fileLayout);
     qDebug() << "file init"<< endl;
     file = new QFile(path);
-    file->open(QIODevice::ReadWrite);
+    int result = file->open(QIODevice::WriteOnly | QIODevice::Truncate);
+    qDebug() << "file open result" << result;
     this->url = url;
     this->totalSize = 0;
 }
@@ -44,10 +45,15 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
     this->setLayout(fileLayout);
     qDebug() << "file init"<< endl;
     file = new QFile(taskInfo->file);
-    file->open(QIODevice::ReadWrite);
+    int result = file->open(QIODevice::Append);
+    qDebug() << "file open result" << result;
     this->url = taskInfo->url;
     this->fileSize = taskInfo->fileSize;
     this->totalSize = taskInfo->totalSize;
+    if (totalSize > 0)
+    {
+        progressBar->setValue(fileSize * 100 / totalSize);
+    }
     qDebug() << taskInfo->file << taskInfo->url << taskInfo->fileSize << taskInfo->totalSize;
 }
 
@@ -56,8 +62,6 @@ void Task::startDownload()
     //QUrl url("http://www.students.uni-marburg.de/~Musicc/media/lt-openmusic/01_open_source__magic_mushrooms.ogg");
     qDebug()<<"startDownload"<<endl;
     this->fileSize = file->size();
-    //qint64 size = file->size();
-    qDebug() <<"filesize"<<fileSize << endl;
 
     // Http Header 里放上范围信息，http://en.wikipedia.org/wiki/List_of_HTTP_header_fields
     // Start from 0
@@ -127,9 +131,8 @@ void Task::destructor()
 TaskInfo Task::getTaskInfo()
 {
     TaskInfo info;
-    QFile taskFile(file);
-    QFileInfo fileInfo(taskFile);
-    info.file = fileInfo.absoluteFilePath();
+    qDebug() << file->fileName();
+    info.file = file->fileName();
     info.fileSize = file->size();
     info.totalSize = this->totalSize;
     info.url = this->url.toString();
