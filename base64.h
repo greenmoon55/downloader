@@ -12,6 +12,7 @@ public:
     static QString thunderURL(QString url);
     static QString flashgetURL(QString url);
     static QString qqdlURL(QString url);
+    static void decodeBase64(QString& str);
 };
 
 #endif // BASE64_H

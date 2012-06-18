@@ -64,7 +64,8 @@ void newTaskDialog::on_Browse_clicked()
 void newTaskDialog::on_ok_clicked()
 {
     reply=true;
-    url = urlLine->displayText();
+    url = urlLine->text();
+    qDebug() << url;
     saveFileName = saveFileNameEdit->displayText();
     saveDirectory = savePathBox->currentText();
     saveFile = saveDirectory + "/" + saveFileName;

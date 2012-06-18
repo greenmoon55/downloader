@@ -71,32 +71,30 @@ void Widget::addTask()
     QString protocol = list.first(); // 如果不存在则返回原string
     qDebug() << protocol;
     QString addr = list.at(1);
-    if(dlg.reply==true)
+    if(dlg.reply == true)
     {
-        if(protocol=="thunder" || protocol=="Thunder")
-            url=base64::thunderURL(addr);
-        if(protocol=="flashget")
-            url=base64::flashgetURL(addr);
-        if(protocol=="qqdl")
-            url=base64::qqdlURL(addr);
+        if(protocol == "thunder" || protocol == "Thunder")
+            url = base64::thunderURL(addr);
+        else if(protocol == "flashget")
+            url = base64::flashgetURL(addr);
+        else if(protocol == "qqdl")
+            url = base64::qqdlURL(addr);
     }
-    if(dlg.reply==true)
+    if(dlg.reply == true)
     {
-        //if(url.split("://").first()=="http")
+        if(url.split("://").first() == "http")
         {
            qDebug() << url << dlg.saveFile;
            Task *file = new Task(dm, url, dlg.saveFile, this);
            mainLayout->addWidget(file);
            this->setLayout(mainLayout);
         }
-        /*
         else
         {
             QMessageBox m;
-            m.setText("Sorry~We can't download this kind of file...T^T    ");
+            m.setText("Sorry~We can't download this kind of file...T^T");
             m.exec();
         }
-        */
     }
 }
 
