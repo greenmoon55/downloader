@@ -12,16 +12,25 @@ QDataStream &operator>>(QDataStream &in, TaskInfo &obj)
     return in;
 }
 
+QSize Widget::sizeHint() const
+{
+    return QSize(500, 400);
+}
 
 Widget::Widget(QWidget *parent): QWidget(parent)
 {
-    mainLayout = new QVBoxLayout;
+    mainLayout = new QVBoxLayout(this);
     dm = new DownloadManager(this);
     QPushButton *addTaskButton = new QPushButton(tr("Add Task"), this);
+    QPushButton *aboutButton = new QPushButton(tr("About"), this);
     connect(addTaskButton, SIGNAL(clicked()), this, SLOT(addTask()));
-    mainLayout->addWidget(addTaskButton);
-    //mainLayout->addStretch();
-    this->setLayout(mainLayout);
+    connect(aboutButton, SIGNAL(clicked()), this, SLOT(showAbout()));
+    QWidget *topButtons = new QWidget(this);
+    QHBoxLayout *topButtonsLayout = new QHBoxLayout(topButtons);
+    topButtonsLayout->addWidget(addTaskButton);
+    topButtonsLayout->addWidget(aboutButton);
+    mainLayout->addWidget(topButtons);
+    //this->setLayout(mainLayout);
 
     qRegisterMetaType<TaskInfo>("TaskInfo");
     qRegisterMetaTypeStreamOperators<TaskInfo>("TaskInfo");
@@ -33,7 +42,7 @@ Widget::Widget(QWidget *parent): QWidget(parent)
 
 
     QWidget *tasksWidget = new QWidget(this);
-    QVBoxLayout *tasksLayout = new QVBoxLayout();
+    tasksLayout = new QVBoxLayout();
 
 
     if (tasks.isValid())
@@ -45,9 +54,7 @@ Widget::Widget(QWidget *parent): QWidget(parent)
         {
             taskInfo = taskInfoList[i].value<TaskInfo>();
             task = new Task(dm, &taskInfo, this);
-            //tasksLayout->takeAt(tasksLayout->count() - 1);
             tasksLayout->addWidget(task);
-            //tasksLayout->addStretch();
         }
         tasksLayout->addStretch();
     }
@@ -65,13 +72,12 @@ Widget::~Widget()
 void Widget::addTask()
 {
     newTaskDialog dlg(this);
-    //Shows the dialog as a modal dialog, blocking until the user closes it.
     if (dlg.exec() == QDialog::Accepted)
     {
         Task *task = new Task(dm, dlg.url, dlg.saveFile, this);
-        mainLayout->takeAt(mainLayout->count() - 1);
-        mainLayout->addWidget(task);
-        mainLayout->addStretch();
+        tasksLayout->takeAt(tasksLayout->count() - 1);
+        tasksLayout->addWidget(task);
+        tasksLayout->addStretch();
     }
 }
 
@@ -93,4 +99,11 @@ void Widget::closeEvent(QCloseEvent *event)
     QVariant final(taskInfoList);
     settings.setValue("tasks", final);
     qDebug() << "CloseEvent";
+}
+
+void Widget::showAbout()
+{
+    QMessageBox m;
+    m.setText(tr("About"));
+    m.exec();
 }

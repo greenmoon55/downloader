@@ -98,14 +98,13 @@ void Task::stopDownload()
 }
 void Task::downloadProgress (qint64 bytesReceived, qint64 bytesTotal)
 {
-    qDebug()<<"Task::downloadProgress";
     qDebug() << "Download Progress: Received=" <<bytesReceived <<": Total=" << bytesTotal;
-    qDebug() << "fileSize" << file->size();
-    qDebug() << "origionalfileSize + Received" << this->fileSize + bytesReceived;
-    qDebug() << "totalSize" << this->totalSize;
+   // qDebug() << "fileSize" << file->size();
+   // qDebug() << "origionalfileSize + Received" << this->fileSize + bytesReceived;
+    //qDebug() << "totalSize" << this->totalSize;
 
     // 每三秒写一次文件
-    if (shortTime.elapsed() > 1000) {
+    if (shortTime.elapsed() > 3000) {
         //qDebug() << (mDownloadSizeAtPause + bytesReceived - mFile->size()) / (double)shortTime.elapsed() << "KB/s" <<  endl;
         file->write(reply->readAll());
         //bytesWrittenToFile = mFile->size();
