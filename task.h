@@ -1,5 +1,5 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef TASK_H
+#define TASK_H
 #include <QtGui/QWidget>
 #include <QPushButton>
 #include <QProgressBar>
@@ -8,6 +8,7 @@
 #include <QTime>
 #include <QMetaType>
 #include <QIODevice>
+#include <QMessageBox>
 #include <QDebug>
 #include "downloadmanager.h"
 
@@ -47,4 +48,4 @@ private slots:
     void metaDataChanged();
 };
 
-#endif // FILE_H
+#endif // TASK_H

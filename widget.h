@@ -11,6 +11,7 @@
 #include <QMetaType>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QScrollArea>
 #include "task.h"
 #include "newTaskDialog.h"
 

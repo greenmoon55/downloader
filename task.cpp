@@ -88,8 +88,6 @@ void Task::stopDownload()
     // disconnect the signal/slot so we don't get any error signal and mess with our error handling code
     // and most importantly it write data to our IODevice here its file which is storing downloaded data.
     disconnectSignals();
-    //disconnect(mCurrentReply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged())); // ???
-
     file->write(reply->readAll());
     qDebug() <<"filesize"<<file->size() << endl;
 
@@ -143,14 +141,14 @@ void Task::disconnectSignals()
 {
     disconnect(reply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
     disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
-    disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
+    disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
 }
 
 void Task::error(QNetworkReply::NetworkError code)
 {
     this->disconnectSignals();
     reply->deleteLater();
-    qDebug() << reply->errorString();
+    QMessageBox::warning(this, tr("下载"), reply->errorString(), QMessageBox::Ok, QMessageBox::Ok);
 }
 
 void Task::finished()
@@ -173,7 +171,8 @@ void Task::metaDataChanged()
     {
         disconnectSignals();
         reply->deleteLater();
-        // 服务器文件已改变，不能继续下载。。
+        QMessageBox::warning(this, tr("下载"), tr("服务器文件大小已改变，不能继续下载。"),
+                             QMessageBox::Ok, QMessageBox::Ok);
     }
     qDebug() << "metaDataChanged" << totalSize;
 }

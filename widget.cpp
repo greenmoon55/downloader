@@ -20,6 +20,7 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     QPushButton *addTaskButton = new QPushButton(tr("Add Task"), this);
     connect(addTaskButton, SIGNAL(clicked()), this, SLOT(addTask()));
     mainLayout->addWidget(addTaskButton);
+    //mainLayout->addStretch();
     this->setLayout(mainLayout);
 
     qRegisterMetaType<TaskInfo>("TaskInfo");
@@ -29,6 +30,12 @@ Widget::Widget(QWidget *parent): QWidget(parent)
 
     QVariant  tasks;
     tasks = settings.value("tasks");
+
+
+    QWidget *tasksWidget = new QWidget(this);
+    QVBoxLayout *tasksLayout = new QVBoxLayout();
+
+
     if (tasks.isValid())
     {
         QList<QVariant> taskInfoList = tasks.toList();
@@ -38,9 +45,17 @@ Widget::Widget(QWidget *parent): QWidget(parent)
         {
             taskInfo = taskInfoList[i].value<TaskInfo>();
             task = new Task(dm, &taskInfo, this);
-            mainLayout->addWidget(task);
+            //tasksLayout->takeAt(tasksLayout->count() - 1);
+            tasksLayout->addWidget(task);
+            //tasksLayout->addStretch();
         }
+        tasksLayout->addStretch();
     }
+    tasksWidget->setLayout(tasksLayout);
+    QScrollArea *sa = new QScrollArea;
+    sa->setWidget(tasksWidget);
+    sa->setWidgetResizable(true);
+    mainLayout->addWidget(sa);
 }
 
 Widget::~Widget()
@@ -54,9 +69,10 @@ void Widget::addTask()
     if (dlg.exec() == QDialog::Accepted)
     {
         Task *task = new Task(dm, dlg.url, dlg.saveFile, this);
+        mainLayout->takeAt(mainLayout->count() - 1);
         mainLayout->addWidget(task);
+        mainLayout->addStretch();
     }
-    mainLayout->addStretch();
 }
 
 void Widget::closeEvent(QCloseEvent *event)
