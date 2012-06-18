@@ -110,6 +110,7 @@ TaskInfo Task::getTaskInfo()
 
 void Task::disconnectSignals()
 {
+    disconnect(reply, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
     disconnect(reply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(downloadProgress(qint64,qint64)));
     disconnect(reply, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(error(QNetworkReply::NetworkError)));
 }
@@ -137,7 +138,7 @@ void Task::metaDataChanged()
     int contentLength = reply->rawHeader("Content-Length").toLongLong();
     qDebug() << "length" << contentLength;
     if (this->totalSize == 0) this->totalSize = contentLength;
-    else if (this->totalSize != contentLength)
+    else if (totalSize - fileSize != contentLength)
     {
         disconnectSignals();
         reply->deleteLater();

@@ -7,10 +7,10 @@ base64::base64()
 
 void base64::decodeBase64(QString& str)
 {
-    qDebug() << str;
     QByteArray ba = str.toLocal8Bit();
     ba = QByteArray::fromBase64(ba);
     str = QString::fromLocal8Bit(ba);
+    qDebug() << str;
 }
 
 QString base64::thunderURL(QString url)

@@ -9,6 +9,9 @@
 #include <QStringList>
 #include <QSpinBox>
 #include <QUrl>
+#include <QStringList>
+#include <QMessageBox>
+#include "base64.h"
 #include <QDebug>
 
 class newTaskDialog: public QDialog

@@ -1,7 +1,4 @@
 #include "widget.h"
-#include "QDebug"
-#include "base64.h"
-
 
 QDataStream &operator<<(QDataStream &out, const TaskInfo &obj)
 {
@@ -57,44 +54,10 @@ void Widget::addTask()
 {
     newTaskDialog dlg(this);
     //Shows the dialog as a modal dialog, blocking until the user closes it.
-    dlg.exec();
-    QString url =dlg.urlLine->text();
-    QStringList list = url.split("://");
-    if (list.size() < 2)
+    if (dlg.exec() == QDialog::Accepted)
     {
-        qDebug() << "listsize";
-        QMessageBox::warning(this, tr("下载"),
-                                        tr("抱歉，无法识别您的下载地址"),
-                                        QMessageBox::Ok, QMessageBox::Ok);
-        return;
-    }
-    QString protocol = list.first(); // 如果不存在则返回原string
-    qDebug() << protocol;
-    QString addr = list.at(1);
-    if(dlg.reply == true)
-    {
-        if(protocol == "thunder" || protocol == "Thunder")
-            url = base64::thunderURL(addr);
-        else if(protocol == "flashget")
-            url = base64::flashgetURL(addr);
-        else if(protocol == "qqdl")
-            url = base64::qqdlURL(addr);
-    }
-    if(dlg.reply == true)
-    {
-        if(url.split("://").first() == "http")
-        {
-           qDebug() << url << dlg.saveFile;
-           Task *file = new Task(dm, url, dlg.saveFile, this);
-           mainLayout->addWidget(file);
-           this->setLayout(mainLayout);
-        }
-        else
-        {
-            QMessageBox m;
-            m.setText("Sorry~We can't download this kind of file...T^T");
-            m.exec();
-        }
+        Task *task = new Task(dm, dlg.url, dlg.saveFile, this);
+        mainLayout->addWidget(task);
     }
 }
 

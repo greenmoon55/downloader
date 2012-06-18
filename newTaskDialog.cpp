@@ -72,14 +72,41 @@ void newTaskDialog::on_ok_clicked()
     qDebug() << saveFile;
     if (QFile::exists(saveFile))
     {
-        qDebug() << "file exists";
+        QMessageBox::warning(this, tr("下载"),
+                                        tr("文件已存在"),
+                                        QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
-    else qDebug() << "not exist";
-    this->close();
+    else qDebug() << "file not exist";
+    QStringList list = url.split("://");
+    if (list.size() < 2)
+    {
+        QMessageBox::warning(this, tr("下载"),
+                                        tr("抱歉，无法识别您的下载地址"),
+                                        QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    QString protocol = list.first(); // 如果不存在则返回原string
+    qDebug() << protocol;
+    QString addr = list.at(1);
+    if (protocol == "thunder" || protocol == "Thunder")
+        url = base64::thunderURL(addr);
+    else if (protocol == "flashget")
+        url = base64::flashgetURL(addr);
+    else if (protocol == "qqdl")
+        url = base64::qqdlURL(addr);
+    if (url.split("://").first() == "http")
+    {
+       this->accept();
+    }
+    else
+    {
+        QMessageBox m;
+        m.setText("Sorry~We can't download this kind of file...T^T");
+        m.exec();
+    }
 }
 void newTaskDialog::on_cancel_clicked()
 {
-    reply=false;
-    this->close();
+    this->reject();
 }
