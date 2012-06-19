@@ -10,6 +10,8 @@
 #include <QIODevice>
 #include <QMessageBox>
 #include <QDebug>
+#include <QVector>
+#include "MyNetworkReply.h"
 #include "downloadmanager.h"
 
 struct TaskInfo
@@ -26,11 +28,20 @@ private:
     DownloadManager *downloadManager;
     QPushButton *startButton, *stopButton, *removeButton;
     QProgressBar *progressBar;
-    QTime shortTime;
+
+    qint64 iThreads;
+    QVector<QTime> shortTimes;
+    //QTime shortTime;
     QUrl url;
+    QVector<QFile*> files;
     QFile *file;
-    QNetworkReply* reply;
-    qint64 fileSize, totalSize;
+    QVector<MyNetworkReply*> replies;
+    QVector<QNetworkRequest> requests;
+    //QNetworkReply* reply;
+    QVector<qint64> fileSizes;
+    //qint64 fileSize
+    qint64 totalSize;
+    QVector<qint64> rangeValues;
     void disconnectSignals();
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
@@ -39,13 +50,14 @@ public:
 
 
 private slots:
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void myDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int iPart);
+    //void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void startDownload();
     void stopDownload();
     void destructor();
-    void error(QNetworkReply::NetworkError code);
-    void finished();
-    void metaDataChanged();
+    void error(QNetworkReply::NetworkError code, int iPart);
+    void finished(int iPart);
+    void metaDataChanged(int iPart);
 };
 
 #endif // TASK_H
