@@ -35,14 +35,23 @@ private:
     QUrl url;
     QVector<QFile*> files;
     QFile *file;
+    QVector<bool> finisheds;
     QVector<MyNetworkReply*> replies;
     QVector<QNetworkRequest> requests;
+    /**
+      Progress bar algorithm handlers
+      //both
+      */
+    QVector<qint64> bytesReceiveds;
+    //QVector<qint64> bytesTotals;
     //QNetworkReply* reply;
     QVector<qint64> fileSizes;
     //qint64 fileSize
     qint64 totalSize;
     QVector<qint64> rangeValues;
-    void disconnectSignals();
+    void disconnectAllSignals();
+    void disconnectSignals(int iPart);
+    void allFinished();
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);

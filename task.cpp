@@ -88,6 +88,10 @@ void Task::startDownload()
     this->shortTimes.clear();
     this->fileSizes.clear();
     this->replies.clear();
+    this->finisheds.clear();
+    //this->bytesTotals.clear();
+    this->bytesReceiveds.clear();
+
     /**
       计算当前已经下载文件大小
       并添加shorttime
@@ -100,6 +104,9 @@ void Task::startDownload()
         qDebug()<<tmpSize << endl;
         fileSizes.push_back(tmpSize);
         shortTimes.push_back(*(new QTime()));
+        finisheds.push_back(false);
+        bytesReceiveds.push_back(0);
+        //bytesTotals.push_back(0);
         qDebug() <<"filesize"<<tmpSize << endl;
         //files[i]->seek(files[i]->size());//文件指针移动到末尾
     }
@@ -198,7 +205,7 @@ void Task::stopDownload()
 
     // disconnect the signal/slot so we don't get any error signal and mess with our error handling code
     // and most importantly it write data to our IODevice here its file which is storing downloaded data.
-    disconnectSignals();
+    disconnectAllSignals();
     for (int i=0; i<iThreads; i++)
     {
         files[i]->write(replies[i]->reply->readAll());
@@ -220,7 +227,8 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
    // qDebug() << "fileSize" << file->size();
    // qDebug() << "origionalfileSize + Received" << this->fileSize + bytesReceived;
     //qDebug() << "totalSize" << this->totalSize;
-
+    bytesReceiveds[iPart] = bytesReceived;
+    //bytesTotals[iPart] = bytesTotal;
     // 每三秒写一次文件
     if (shortTimes[iPart].elapsed() > 3000) {
         //qDebug() << (mDownloadSizeAtPause + bytesReceived - mFile->size()) / (double)shortTime.elapsed() << "KB/s" <<  endl;
@@ -230,12 +238,28 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
         shortTimes[iPart].start();
     }
     //else qDebug() << "continue" << endl;
-    if (bytesTotal + fileSizes[iPart] == 0) return; // Avoid "divide by 0"
-    int percentage = ((bytesReceived + fileSizes[iPart]) * 100 )/ (bytesTotal + fileSizes[iPart]);
+//    for (int i=0; i<iThreads; i++)
+//    {
+//        allTotal += bytesTotals[iPart];
+//    }
+    if (!totalSize) return; // Avoid "divided by 0"
+    //if (bytesTotal + fileSizes[iPart] == 0) return; // Avoid "divide by 0"
+    qint64 allPart = 0;
+    qint64 allTotal = totalSize;
+    for (int i=0; i<iThreads; i++)
+    {
+        allPart += bytesReceiveds[iPart];
+    }
+    qDebug()<<"allPart=" << allPart;
+    qDebug()<<"allTotal=" << allTotal;
+    int percentage = allPart*100 / allTotal;
+    //int percentage = ((bytesReceiveds[iPart] + fileSizes[iPart]) * 100 )/ (bytesTotals[iPart] + fileSizes[iPart]);
+
+
     /**
       TODO:progressBar's algorithm should be changed in multi-thread downloading
       */
-    //this->progressBar->setValue(percentage);
+    this->progressBar->setValue(percentage);
     qDebug() << percentage;
     if (bytesReceived == bytesTotal)
     {
@@ -261,8 +285,15 @@ TaskInfo Task::getTaskInfo()
     info.url = this->url.toString();
     return info;
 }
+void Task::disconnectSignals(int iPart)
+{
+    disconnect(replies[iPart], SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
+    disconnect(replies[iPart], SIGNAL(myDownloadProgress(qint64,qint64,int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
+    disconnect(replies[iPart], SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
 
-void Task::disconnectSignals()
+}
+
+void Task::disconnectAllSignals()
 {
     for (int i=0; i<replies.size(); i++)
     {
@@ -275,11 +306,11 @@ void Task::disconnectSignals()
 
 void Task::error(QNetworkReply::NetworkError code, int iPart)
 {
-    this->disconnectSignals();
-    for (int i=0; i<replies.size(); i++){
-        replies[i]->deleteLater();
-    }
-    replies.clear();
+    this->disconnectSignals(iPart);
+  //  for (int i=0; i<replies.size(); i++){
+        replies[iPart]->reply->deleteLater();
+  //  }
+  //  replies.clear();
     //reply->deleteLater();
     QMessageBox::warning(this, tr("下载"), replies[iPart]->reply->errorString(), QMessageBox::Ok, QMessageBox::Ok);
 }
@@ -287,14 +318,52 @@ void Task::error(QNetworkReply::NetworkError code, int iPart)
 void Task::finished(int iPart)
 {
     /**
-      In this part we should do the file connection jobs.
-       TODO
+      Here we have a problem, at the time when one part is finished and the
+      others are not, finisheds cannot do the finished judging job
+      TODO
       */
-    startButton->setEnabled(false);
-    stopButton->setEnabled(false);
+    finisheds[iPart] = true;
+    //startButton->setEnabled(false);
+    //stopButton->setEnabled(false);
     qDebug() << "finished" << iPart;
     files[iPart]->write(replies[iPart]->reply->readAll()); // 不能省略
-    this->disconnectSignals();    
+    this->disconnectSignals(iPart);
+    bool allfinished = true;
+    for (int i=0; i<finisheds.size(); i++)
+    {
+        if (finisheds[i] == false)
+        {
+            allfinished = false;
+            break;
+        }
+    }
+    if (allfinished)
+        allFinished();
+}
+void Task::allFinished()
+{
+    /**
+      We do the file concation job and all the finished jobs here.
+      */
+    this->progressBar->setValue(100);
+    qDebug()<<"allFinished()";
+    QFile* theFile = new QFile("download.result");
+    theFile->open(QIODevice::ReadWrite);
+    for (int i=0; i<files.size(); i++)
+    {
+        //first, every temp file seek to the head;
+        files[i]->seek(0);
+        //second, cycling read to buffer and write to the finished file
+        while (!files[i]->atEnd())
+        {
+            const int iMaxLength = 0x10000;
+            QByteArray tmpArray =
+            files[i]->read( iMaxLength );
+            theFile->write(tmpArray);
+        }
+        files[i]->close();
+    }
+    theFile->close();
 }
 
 void Task::metaDataChanged(int iPart)
