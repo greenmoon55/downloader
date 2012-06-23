@@ -1,6 +1,6 @@
 #include "task.h"
 
-// 显示出错提示
+// 显示出错提示，似乎没啥用。。
 void Task::errorMsg(QString str)
 {
      QMessageBox::warning(this, tr("下载"), str, QMessageBox::Ok, QMessageBox::Ok);
@@ -26,14 +26,13 @@ void Task::initLayout()
 }
 
 // 用于新建任务
-Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *parent)
-    :QWidget(parent), downloadManager(downloadManager)
+Task::Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent)
+    :QWidget(parent), downloadManager(downloadManager), threadCount(threadCount)
 {
-    threadCount = 5;
     initLayout();
     qDebug() << "file init"<< endl;
     file = new QFile(path);
-    if (!file->open(QIODevice::WriteOnly | QIODevice::Truncate))
+    if (!file->open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         errorMsg("无法创建文件"+path);
         destructor();
@@ -42,16 +41,16 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
 
     for (int i = 0; i < threadCount; i++)
     {
-        stopFileSizes.push_back(0);
+        //stopFileSizes.push_back(0);
         char buf[16];
         sprintf(buf, ".part%d", i);
         QString filenamebuf = file->fileName() + buf;
         qDebug() << filenamebuf;
         files.push_back(new QFile(filenamebuf));
         qDebug()<<"filename:" << files[i]->fileName();
-        if (!files.last()->open(QIODevice::ReadWrite))
+        if (!files.last()->open(QIODevice::ReadWrite | QIODevice::Truncate))
         {
-            errorMsg("无法创建文件"+path);
+            errorMsg("无法创建文件" + files[i]->fileName());
             destructor();
             return;
         }
@@ -63,36 +62,41 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
 // 恢复任务，信息从taskInfo中获得
 // 尚未修改！
 Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent)
-    :QWidget(parent), downloadManager(downloadManager), totalSize(0)
+    :QWidget(parent), downloadManager(downloadManager)
 {
-    threadCount = 5;
     initLayout();
     qDebug() << "file init"<< endl;
+    this->totalSize = taskInfo->totalSize;
+    this->threadCount = taskInfo->threadCount;
+    this->url = taskInfo->url;
     file = new QFile(taskInfo->file);
-    int result = file->open(QIODevice::Append);
-    files.clear();
-    stopFileSizes.clear();
-    for (int i = 0; i< threadCount; i++)
+    if (!file->open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
-        stopFileSizes.push_back(0);
+        errorMsg("无法创建文件" + taskInfo->file);
+        destructor();
+        return;
+    }
+    for (int i = 0; i < threadCount; i++)
+    {
+        //stopFileSizes.push_back(0);
         char buf[16];
         sprintf(buf, ".part%d", i);
         QString filenamebuf = file->fileName() + buf;
-//        char filenamebuf[256];
-//        sprintf(filenamebuf, "download.part%d", i);
         qDebug() << filenamebuf;
         files.push_back(new QFile(filenamebuf));
         qDebug()<<"filename:" << files[i]->fileName();
-        files.last()->open(QIODevice::ReadWrite);
+        if (!files.last()->open(QIODevice::ReadWrite | QIODevice::Append)) // 和上面构造函数的不同点
+        {
+            errorMsg("无法创建文件" + files[i]->fileName());
+            destructor();
+            return;
+        }
+    }    
+    //this->fileSize = taskInfo->fileSize;    
+    if (totalSize > 0)
+    {
+        progressBar->setValue(taskInfo->fileSize * 100 / totalSize);
     }
-    qDebug() << "file open result" << result;
-    this->url = taskInfo->url;
-    //this->fileSize = taskInfo->fileSize;
-    this->totalSize = taskInfo->totalSize;
-//    if (totalSize > 0)
-//    {
-//        progressBar->setValue(fileSize * 100 / totalSize);
-//    }
     qDebug() << taskInfo->file << taskInfo->url << taskInfo->fileSize << taskInfo->totalSize;
 }
 
@@ -236,7 +240,7 @@ void Task::stopDownload()
         files[i]->write(replies[i]->reply->readAll());
         replies[i]->reply->abort();
         replies[i]->reply->deleteLater();
-        stopFileSizes[i] = files[i]->size();
+        //stopFileSizes[i] = files[i]->size();
     }
     startButton->setEnabled(true);
     stopButton->setEnabled(false);
@@ -261,10 +265,9 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     }
     if (!totalSize) return; // Avoid "divided by 0"
     qint64 allPart = 0;
-    qint64 allTotal = totalSize;
     for (int i=0; i<bytesReceiveds.size(); i++)
     {
-        allPart += bytesReceiveds[i] + stopFileSizes[i];
+        allPart += bytesReceiveds[i] + fileSizes[i];
     }
     //qDebug()<<"allPart=" << allPart;
     //qDebug()<<"allTotal=" << allTotal;
@@ -277,7 +280,7 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
         speedTime.start();
     }
 
-    int percentage = allPart*100 / allTotal;
+    int percentage = allPart*100 / totalSize;
     /**
       progressBar's algorithm should be changed in multi-thread downloading
       */
@@ -312,9 +315,11 @@ TaskInfo Task::getTaskInfo()
     TaskInfo info;
     qDebug() << file->fileName();
     info.file = file->fileName();
-    info.fileSize = file->size();
+    info.fileSize = 0;
+    for (int i = 0; i < files.size(); i++) info.fileSize += files[i]->size();
     info.totalSize = this->totalSize;
     info.url = this->url.toString();
+    info.threadCount = this->threadCount;
     return info;
 }
 void Task::disconnectSignals(int iPart)
@@ -345,6 +350,7 @@ void Task::error(QNetworkReply::NetworkError code, int iPart)
     }
     replies.clear();
     removeTempFiles();
+    destructor();
     QMessageBox::warning(this, tr("下载"), replies[iPart]->reply->errorString(), QMessageBox::Ok, QMessageBox::Ok);
 }
 

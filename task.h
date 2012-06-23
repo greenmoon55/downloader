@@ -18,7 +18,7 @@
 struct TaskInfo
 {
     QString url, file;
-    qint64 fileSize, totalSize;
+    qint64 fileSize, totalSize, threadCount;
 };
 Q_DECLARE_METATYPE(TaskInfo)
 
@@ -46,9 +46,9 @@ private:
       both
       */
     QVector<qint64> bytesReceiveds;
-    QVector<qint64> stopFileSizes;
+    //QVector<qint64> stopFileSizes;
     //QNetworkReply* reply;
-    QVector<qint64> fileSizes;
+    QVector<qint64> fileSizes; // 在 startDownload() 更新
     //qint64 fileSize
     qint64 totalSize;
     QVector<qint64> rangeValues;
@@ -59,7 +59,7 @@ private:
     void errorMsg(QString str);
     void removeTempFiles();
 public:
-    Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
+    Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);
     TaskInfo getTaskInfo();
 

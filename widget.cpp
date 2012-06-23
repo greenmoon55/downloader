@@ -2,13 +2,13 @@
 
 QDataStream &operator<<(QDataStream &out, const TaskInfo &obj)
 {
-     out << obj.url << obj.file << obj.fileSize << obj.totalSize;
+     out << obj.url << obj.file << obj.fileSize << obj.totalSize << obj.threadCount;
      return out;
 }
 
 QDataStream &operator>>(QDataStream &in, TaskInfo &obj)
 {
-    in >> obj.url >> obj.file >> obj.fileSize >> obj.totalSize;
+    in >> obj.url >> obj.file >> obj.fileSize >> obj.totalSize >> obj.threadCount;
     return in;
 }
 
@@ -74,7 +74,7 @@ void Widget::addTask()
     newTaskDialog dlg(this);
     if (dlg.exec() == QDialog::Accepted)
     {
-        Task *task = new Task(dm, dlg.url, dlg.saveFile, this);
+        Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
         tasksLayout->takeAt(tasksLayout->count() - 1);
         tasksLayout->addWidget(task);
         tasksLayout->addStretch();
