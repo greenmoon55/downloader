@@ -24,7 +24,7 @@ public slots:
 private slots:
 
 
-private:
+public:
     QNetworkAccessManager* manager;
 };
 

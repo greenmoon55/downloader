@@ -30,7 +30,7 @@ private:
     QPushButton *startButton, *stopButton, *removeButton;
     QProgressBar *progressBar;
 
-    qint64 iThreads;
+    qint64 threadCount;
     qint64 prevAllParts;
     QTime speedTime;
     QVector<QTime> shortTimes;
@@ -55,6 +55,9 @@ private:
     void disconnectAllSignals();
     void disconnectSignals(int iPart);
     void allFinished();
+    void initLayout();
+    void errorMsg(QString str);
+    void removeTempFiles();
 public:
     Task(DownloadManager* dm, QUrl url, QString path, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);
