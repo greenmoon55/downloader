@@ -26,4 +26,5 @@ HEADERS  += \
     widget.h \
     task.h \
     newTaskDialog.h \
-    base64.h
+    base64.h \
+    MyNetworkReply.h
