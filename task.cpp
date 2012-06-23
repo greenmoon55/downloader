@@ -101,7 +101,7 @@ void Task::startDownload()
         qDebug()<< "i=" << i;
         qDebug() << files.size();
         qint64 tmpSize = files[i]->size();
-        qDebug()<<tmpSize << endl;
+        qDebug()<< tmpSize << endl;
         fileSizes.push_back(tmpSize);
         shortTimes.push_back(*(new QTime()));
         finisheds.push_back(false);
@@ -194,8 +194,8 @@ void Task::startDownload()
 //    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
 //    connect(reply, SIGNAL(finished()), this, SLOT(finished()));
 //    shortTime.start();
-//    startButton->setEnabled(false);
-//    stopButton->setEnabled(true);
+    startButton->setEnabled(false);
+    stopButton->setEnabled(true);
 //    qDebug()<<"startDownload"<<endl;
 
 }
@@ -343,12 +343,20 @@ void Task::finished(int iPart)
 void Task::allFinished()
 {
     /**
+      We have another problem here, that if we click stop button
+      this function would be executed.
+      Don't know how to do this job.
+      TODO.
+      */
+    /**
       We do the file concation job and all the finished jobs here.
       */
-    this->progressBar->setValue(100);
+    //this->progressBar->setValue(100);
     qDebug()<<"allFinished()";
-    QFile* theFile = new QFile("download.result");
-    theFile->open(QIODevice::ReadWrite);
+    //QFile* theFile = new QFile("download.result");
+    //theFile->open(QIODevice::ReadWrite);
+    file->resize(0);
+    file->seek(0);
     for (int i=0; i<files.size(); i++)
     {
         //first, every temp file seek to the head;
@@ -359,16 +367,21 @@ void Task::allFinished()
             const int iMaxLength = 0x10000;
             QByteArray tmpArray =
             files[i]->read( iMaxLength );
-            theFile->write(tmpArray);
+            file->write(tmpArray);
         }
-        files[i]->close();
+        //files[i]->close();
     }
-    theFile->close();
+    //file->close();
+    /**
+      remove temp files. File names need to be changed
+      in order to download many files at the same time.
+      TODO.
+      */
+    //system("rm download.part*");
 }
 
 void Task::metaDataChanged(int iPart)
 {
-
 //    disconnect(replies[iPart], SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
 //    qDebug() << replies[iPart]->rawHeader("Content-Length");
 //    int contentLength = reply->rawHeader("Content-Length").toLongLong();
