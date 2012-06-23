@@ -13,11 +13,13 @@ void Task::initLayout()
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
     progressBar = new QProgressBar(this);
+    speedLabel = new QLabel(this);
     QHBoxLayout *taskLayout = new QHBoxLayout;
     taskLayout->addWidget(startButton);
     taskLayout->addWidget(stopButton);
     taskLayout->addWidget(removeButton);
     taskLayout->addWidget(progressBar);
+    taskLayout->addWidget(speedLabel);
     connect(startButton, SIGNAL(clicked()), this, SLOT(startDownload()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
     connect(removeButton, SIGNAL(clicked()), this, SLOT(destructor()));
@@ -60,7 +62,6 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 thre
 }
 
 // 恢复任务，信息从taskInfo中获得
-// 尚未修改！
 Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager)
 {
@@ -102,6 +103,7 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
 
 void Task::startDownload()
 {
+    speedTime.start();
     qDebug()<<"startDownload"<<endl;
     //this->fileSize = file->size();
     this->rangeValues.clear();
@@ -226,7 +228,6 @@ void Task::startDownload()
 //    qDebug()<<"startDownload"<<endl;
 
     prevAllParts = 0;
-    speedTime.start();
 }
 void Task::stopDownload()
 {
@@ -275,7 +276,8 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     if (speedTime.elapsed()>2000)
     {
         qDebug() << "time elapsed" << speedTime.elapsed();
-        qDebug() << "speed"<< (allPart-prevAllParts)/speedTime.elapsed();
+        qint64 speed = (allPart-prevAllParts)/speedTime.elapsed();
+        this->speedLabel->setText(QString::number(speed) + "KB/s");
         prevAllParts = allPart;
         speedTime.start();
     }

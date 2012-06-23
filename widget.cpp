@@ -19,6 +19,7 @@ QSize Widget::sizeHint() const
 
 Widget::Widget(QWidget *parent): QWidget(parent)
 {
+    // 界面及读取设置
     mainLayout = new QVBoxLayout(this);
     dm = new DownloadManager(this);
     QPushButton *addTaskButton = new QPushButton(tr("Add Task"), this);
@@ -63,6 +64,9 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     sa->setWidget(tasksWidget);
     sa->setWidgetResizable(true);
     mainLayout->addWidget(sa);
+
+    clipboard = QApplication::clipboard();
+    connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(addTask(QClipboard::Mode)));
 }
 
 Widget::~Widget()
@@ -80,6 +84,23 @@ void Widget::addTask()
         tasksLayout->addStretch();
     }
 }
+
+void Widget::addTask(QClipboard::Mode mode)
+{
+    if (mode == QClipboard::Clipboard)
+    {
+        newTaskDialog dlg(this);
+        dlg.urlLine->setText(clipboard->text());
+        if (dlg.exec() == QDialog::Accepted)
+        {
+            Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
+            tasksLayout->takeAt(tasksLayout->count() - 1);
+            tasksLayout->addWidget(task);
+            tasksLayout->addStretch();
+        }
+    }
+}
+
 
 void Widget::closeEvent(QCloseEvent *event)
 {

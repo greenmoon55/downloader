@@ -13,6 +13,8 @@
 #include <QFileDialog>
 #include <QScrollArea>
 #include <QSize>
+#include <QClipboard>
+#include <QApplication>
 #include "task.h"
 #include "newTaskDialog.h"
 
@@ -22,6 +24,7 @@ class Widget : public QWidget
 private:
     QVBoxLayout *mainLayout, *tasksLayout;
     DownloadManager *dm;
+    QClipboard *clipboard;
     void closeEvent(QCloseEvent *event);
 public:
     Widget(QWidget *parent = 0);
@@ -29,8 +32,9 @@ public:
     QSize sizeHint() const;
 private slots:
     void showAbout();
-public slots:
+private slots:
     void addTask();
+    void addTask(QClipboard::Mode mode);
 };
 
 #endif // WIDGET_H

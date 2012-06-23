@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QVector>
 #include <QEventLoop>
+#include <QLabel>
 #include "MyNetworkReply.h"
 #include "downloadmanager.h"
 
@@ -29,6 +30,7 @@ private:
     DownloadManager *downloadManager;
     QPushButton *startButton, *stopButton, *removeButton;
     QProgressBar *progressBar;
+    QLabel *speedLabel;
 
     qint64 threadCount;
     qint64 prevAllParts;
