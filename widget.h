@@ -15,6 +15,9 @@
 #include <QSize>
 #include <QClipboard>
 #include <QApplication>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+
 #include "task.h"
 #include "newTaskDialog.h"
 
@@ -26,10 +29,14 @@ private:
     DownloadManager *dm;
     QClipboard *clipboard;
     void closeEvent(QCloseEvent *event);
+    void showNewTaskDialog(QString str = "");
 public:
     Widget(QWidget *parent = 0);
     ~Widget();
     QSize sizeHint() const;
+protected:
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
 private slots:
     void showAbout();
 private slots:

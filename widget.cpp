@@ -65,17 +65,23 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     sa->setWidgetResizable(true);
     mainLayout->addWidget(sa);
 
+    // 剪切板
     clipboard = QApplication::clipboard();
     connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(addTask(QClipboard::Mode)));
+
+    // 支持拖拽
+    setAcceptDrops(true);
 }
 
 Widget::~Widget()
 {    
 }
 
-void Widget::addTask()
+void Widget::showNewTaskDialog(QString str)
 {
+    //if (str.isEmpty())
     newTaskDialog dlg(this);
+    dlg.urlLine->setText(str);
     if (dlg.exec() == QDialog::Accepted)
     {
         Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
@@ -85,19 +91,17 @@ void Widget::addTask()
     }
 }
 
+void Widget::addTask()
+{
+    newTaskDialog dlg(this);
+    showNewTaskDialog();
+}
+
 void Widget::addTask(QClipboard::Mode mode)
 {
-    if (mode == QClipboard::Clipboard)
+    if (mode == QClipboard::Clipboard && clipboard->text().contains("://"))
     {
-        newTaskDialog dlg(this);
-        dlg.urlLine->setText(clipboard->text());
-        if (dlg.exec() == QDialog::Accepted)
-        {
-            Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
-            tasksLayout->takeAt(tasksLayout->count() - 1);
-            tasksLayout->addWidget(task);
-            tasksLayout->addStretch();
-        }
+        showNewTaskDialog(clipboard->text());
     }
 }
 
@@ -127,4 +131,15 @@ void Widget::showAbout()
     QMessageBox m;
     m.setText(tr("About"));
     m.exec();
+}
+
+void Widget::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasText())
+        event->acceptProposedAction();
+}
+
+void Widget::dropEvent(QDropEvent *event)
+{
+    showNewTaskDialog(event->mimeData()->text());
 }
