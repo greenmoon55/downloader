@@ -40,10 +40,10 @@ private:
     QVector<QNetworkRequest> requests;
     /**
       Progress bar algorithm handlers
-      //both
+      both
       */
     QVector<qint64> bytesReceiveds;
-    //QVector<qint64> bytesTotals;
+    QVector<qint64> stopFileSizes;
     //QNetworkReply* reply;
     QVector<qint64> fileSizes;
     //qint64 fileSize

@@ -4,7 +4,7 @@
 Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager) // right?
 {
-    iThreads = 3;
+    iThreads = 5;
     startButton = new QPushButton("Start", this);
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
@@ -23,10 +23,15 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
     file = new QFile(path);
     int result = file->open(QIODevice::WriteOnly | QIODevice::Truncate);
     files.clear();
+    stopFileSizes.clear();
     for (int i=0; i<iThreads; i++)
     {
-        char filenamebuf[32];
-        sprintf(filenamebuf, "download.part%d", i);
+        stopFileSizes.push_back(0);
+        char buf[16];
+        sprintf(buf, ".part%d", i);
+        QString filenamebuf = file->fileName() + buf;
+//        char filenamebuf[256];
+//        sprintf(filenamebuf, "download.part%d", i);
         qDebug() << filenamebuf;
         files.push_back(new QFile(filenamebuf));
         qDebug()<<"filename:" << files[i]->fileName();
@@ -40,7 +45,7 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, QWidget *pa
 Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager), totalSize(0)
 {
-    iThreads = 3;
+    iThreads = 5;
     startButton = new QPushButton("Start", this);
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
@@ -59,10 +64,15 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
     file = new QFile(taskInfo->file);
     int result = file->open(QIODevice::Append);
     files.clear();
+    stopFileSizes.clear();
     for (int i=0; i<iThreads; i++)
     {
-        char filenamebuf[32];
-        sprintf(filenamebuf, "download.part%d", i);
+        stopFileSizes.push_back(0);
+        char buf[16];
+        sprintf(buf, ".part%d", i);
+        QString filenamebuf = file->fileName() + buf;
+//        char filenamebuf[256];
+//        sprintf(filenamebuf, "download.part%d", i);
         qDebug() << filenamebuf;
         files.push_back(new QFile(filenamebuf));
         qDebug()<<"filename:" << files[i]->fileName();
@@ -89,7 +99,6 @@ void Task::startDownload()
     this->fileSizes.clear();
     this->replies.clear();
     this->finisheds.clear();
-    //this->bytesTotals.clear();
     this->bytesReceiveds.clear();
 
     /**
@@ -111,7 +120,6 @@ void Task::startDownload()
         //files[i]->seek(files[i]->size());//文件指针移动到末尾
     }
 
-    qDebug()<<"abc";
     /**
       记录文件总大小以便分块.
       */
@@ -126,6 +134,19 @@ void Task::startDownload()
     delete tmpReply;
     totalSize = var.toLongLong();
     qDebug() << "The file size is:" << totalSize;
+    if (totalSize == file->size())
+    {
+        /**
+          remove temp files.
+          */
+        char buf[256];
+        sprintf(buf, "rm %s.part*", file->fileName().toLatin1().data());
+        system(buf);
+        stopButton->setEnabled(false);
+        startButton->setEnabled(false);
+        progressBar->setValue(100);
+        return;
+    }
     /**
       计算分块文件大小，开始结束位置，并记录在案
       */
@@ -211,6 +232,7 @@ void Task::stopDownload()
         files[i]->write(replies[i]->reply->readAll());
         replies[i]->reply->abort();
         replies[i]->reply->deleteLater();
+        stopFileSizes[i] = files[i]->size();
     }
     //file->write(reply->readAll());
     //qDebug() <<"filesize"<<file->size() << endl;
@@ -246,18 +268,16 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     //if (bytesTotal + fileSizes[iPart] == 0) return; // Avoid "divide by 0"
     qint64 allPart = 0;
     qint64 allTotal = totalSize;
-    for (int i=0; i<iThreads; i++)
+    for (int i=0; i<bytesReceiveds.size(); i++)
     {
-        allPart += bytesReceiveds[iPart];
+        allPart += bytesReceiveds[i];
+        allPart += stopFileSizes[i];
     }
     qDebug()<<"allPart=" << allPart;
     qDebug()<<"allTotal=" << allTotal;
     int percentage = allPart*100 / allTotal;
-    //int percentage = ((bytesReceiveds[iPart] + fileSizes[iPart]) * 100 )/ (bytesTotals[iPart] + fileSizes[iPart]);
-
-
     /**
-      TODO:progressBar's algorithm should be changed in multi-thread downloading
+      progressBar's algorithm should be changed in multi-thread downloading
       */
     this->progressBar->setValue(percentage);
     qDebug() << percentage;
@@ -265,6 +285,18 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     {
         qDebug()<<"finish writing";
         files[iPart]->write(replies[iPart]->reply->readAll());
+        finisheds[iPart] = true;
+        bool allfinished = true;
+        for (int i=0; i<finisheds.size(); i++)
+        {
+            if (finisheds[i] == false)
+            {
+                allfinished = false;
+                break;
+            }
+        }
+        if (allfinished)
+            allFinished();
     }
     return;
 }
@@ -317,44 +349,34 @@ void Task::error(QNetworkReply::NetworkError code, int iPart)
 
 void Task::finished(int iPart)
 {
-    /**
-      Here we have a problem, at the time when one part is finished and the
-      others are not, finisheds cannot do the finished judging job
-      TODO
-      */
-    finisheds[iPart] = true;
     //startButton->setEnabled(false);
     //stopButton->setEnabled(false);
     qDebug() << "finished" << iPart;
     files[iPart]->write(replies[iPart]->reply->readAll()); // 不能省略
+
     this->disconnectSignals(iPart);
-    bool allfinished = true;
-    for (int i=0; i<finisheds.size(); i++)
-    {
-        if (finisheds[i] == false)
-        {
-            allfinished = false;
-            break;
-        }
-    }
-    if (allfinished)
-        allFinished();
+//    finisheds[iPart] = true;
+//    bool allfinished = true;
+//    for (int i=0; i<finisheds.size(); i++)
+//    {
+//        if (finisheds[i] == false)
+//        {
+//            allfinished = false;
+//            break;
+//        }
+//    }
+//    if (allfinished)
+//        allFinished();
 }
 void Task::allFinished()
 {
     /**
-      We have another problem here, that if we click stop button
-      this function would be executed.
-      Don't know how to do this job.
-      TODO.
-      */
-    /**
       We do the file concation job and all the finished jobs here.
       */
-    //this->progressBar->setValue(100);
+    startButton->setEnabled(false);
+    stopButton->setEnabled(false);
+    this->progressBar->setValue(100);
     qDebug()<<"allFinished()";
-    //QFile* theFile = new QFile("download.result");
-    //theFile->open(QIODevice::ReadWrite);
     file->resize(0);
     file->seek(0);
     for (int i=0; i<files.size(); i++)
@@ -369,15 +391,15 @@ void Task::allFinished()
             files[i]->read( iMaxLength );
             file->write(tmpArray);
         }
-        //files[i]->close();
+        files[i]->close();
     }
-    //file->close();
+    file->close();
     /**
-      remove temp files. File names need to be changed
-      in order to download many files at the same time.
-      TODO.
+      remove temp files.
       */
-    //system("rm download.part*");
+    char buf[256];
+    sprintf(buf, "rm %s.part*", file->fileName().toLatin1().data());
+    system(buf);
 }
 
 void Task::metaDataChanged(int iPart)
