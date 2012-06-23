@@ -28,3 +28,9 @@ HEADERS  += \
     newTaskDialog.h \
     base64.h \
     MyNetworkReply.h
+
+OTHER_FILES += \
+    download.png
+
+RESOURCES += \
+    resources.qrc

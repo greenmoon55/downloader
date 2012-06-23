@@ -71,6 +71,15 @@ Widget::Widget(QWidget *parent): QWidget(parent)
 
     // 支持拖拽
     setAcceptDrops(true);
+
+    // 系统托盘
+    QIcon icon(":/download.png");
+    QSystemTrayIcon *trayIcon = new QSystemTrayIcon(icon, this);
+    QMenu *menu = new QMenu(this);
+    menu->addAction(tr("新建下载"), this, SLOT(addTask()));
+    menu->addAction(tr("退出"), this, SLOT(quit()));
+    trayIcon->setContextMenu(menu);
+    trayIcon->show();
 }
 
 Widget::~Widget()
@@ -142,4 +151,9 @@ void Widget::dragEnterEvent(QDragEnterEvent *event)
 void Widget::dropEvent(QDropEvent *event)
 {
     showNewTaskDialog(event->mimeData()->text());
+}
+
+void Widget::quit()
+{
+    this->close();
 }

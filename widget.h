@@ -17,6 +17,8 @@
 #include <QApplication>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QSystemTrayIcon>
+#include <QMenu>
 
 #include "task.h"
 #include "newTaskDialog.h"
@@ -39,9 +41,9 @@ protected:
     void dropEvent(QDropEvent *event);
 private slots:
     void showAbout();
-private slots:
     void addTask();
     void addTask(QClipboard::Mode mode);
+    void quit();
 };
 
 #endif // WIDGET_H
