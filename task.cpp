@@ -7,7 +7,7 @@ void Task::errorMsg(QString str)
 }
 
 // 初始化布局
-void Task::initLayout()
+void Task::initLayout(QString fileName)
 {
     startButton = new QPushButton("Start", this);
     QPixmap map;
@@ -18,25 +18,33 @@ void Task::initLayout()
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
     progressBar = new QProgressBar(this);
-    speedLabel = new QLabel(this);
+    //speedLabel = new QLabel(this);
     QHBoxLayout *taskLayout = new QHBoxLayout;
     taskLayout->addWidget(startButton, 0, Qt::AlignLeft);
     taskLayout->addWidget(stopButton, 0, Qt::AlignLeft);
     taskLayout->addWidget(removeButton, 0, Qt::AlignLeft);
     taskLayout->addWidget(progressBar, 1, 0); // fill
-    taskLayout->addWidget(speedLabel, 0, Qt::AlignRight);
+    //taskLayout->addWidget(speedLabel, 0, Qt::AlignRight);
     connect(startButton, SIGNAL(clicked()), this, SLOT(startDownload()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
     connect(removeButton, SIGNAL(clicked()), this, SLOT(removeTask()));
     stopButton->setEnabled(false);
-    this->setLayout(taskLayout);
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addLayout(taskLayout);
+    QHBoxLayout *infoLayout = new QHBoxLayout();
+    downloadInfoLabel = new QLabel();
+    QLabel *fileNameLabel = new QLabel(fileName);
+    infoLayout->addWidget(fileNameLabel, 0, Qt::AlignLeft);
+    infoLayout->addWidget(downloadInfoLabel, 0, Qt::AlignRight);
+    mainLayout->addLayout(infoLayout);
+    this->setLayout(mainLayout);
 }
 
 // 用于新建任务
 Task::Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager), threadCount(threadCount)
 {
-    initLayout();
+    initLayout(path);
     qDebug() << "file init"<< endl;
     file = new QFile(path);
     if (!file->open(QIODevice::ReadWrite | QIODevice::Truncate))
@@ -70,20 +78,23 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 thre
 Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent)
     :QWidget(parent), downloadManager(downloadManager)
 {
-    initLayout();
+    initLayout(taskInfo->file);
     qDebug() << "file init"<< endl;
     this->totalSize = taskInfo->totalSize;
     this->threadCount = taskInfo->threadCount;
     this->url = taskInfo->url;
 
+    file = new QFile(taskInfo->file);
+
     // 下载完了
-    if (totalSize == taskInfo->fileSize)
+    qDebug() << "totalsize" << totalSize << "fileSize" << taskInfo->fileSize;
+    if (totalSize != 0 && totalSize == taskInfo->fileSize)
     {
         startButton->setEnabled(false);
         progressBar->setValue(100);
         return;
     }
-    file = new QFile(taskInfo->file);
+
     if (!file->open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         errorMsg("无法创建文件" + taskInfo->file);
@@ -116,6 +127,7 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
 
 void Task::startDownload()
 {
+    startButton->setEnabled(false);
     speedTime.start();
     qDebug()<<"startDownload"<<endl;
     //this->fileSize = file->size();
@@ -231,7 +243,7 @@ void Task::startDownload()
         requests.push_back(tmpRequest);
         requests.last().setRawHeader("Range", rangeHeaderValues[i]);
         MyNetworkReply *tempReply = new MyNetworkReply(i, downloadManager->newDownload(requests[i]));
-        replies.push_back(tempReply);//这句话可能有问题，是否应该为每一块下载都新建一个downloadmanager？没必要
+        replies.push_back(tempReply);
         connect(replies.last(), SIGNAL(myDownloadProgress(qint64, qint64, int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
         connect(replies.last(), SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
         connect(replies.last(), SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
@@ -239,7 +251,7 @@ void Task::startDownload()
         shortTimes[i].start();
     }
 
-    startButton->setEnabled(false);
+
     stopButton->setEnabled(true);
 //    qDebug()<<"startDownload"<<endl;
 
@@ -290,11 +302,14 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     //qDebug()<<"allPart=" << allPart;
     //qDebug()<<"allTotal=" << allTotal;
     // 计算速度
-    if (speedTime.elapsed()>2000)
+    qint64 speed;
+    if (speedTime.elapsed() > 2000)
     {
         qDebug() << "time elapsed" << speedTime.elapsed();
-        qint64 speed = (allPart-prevAllParts)/speedTime.elapsed();
-        this->speedLabel->setText(QString::number(speed) + "KB/s");
+        speed = (allPart-prevAllParts)/speedTime.elapsed();
+        //this->speedLabel->setText(QString::number(speed) + "KB/s");
+        this->downloadInfoLabel->setText(QString::number(allPart) + "of" +
+                                 QString::number(this->totalSize) + " " + QString::number(speed) + "KB/s");
         prevAllParts = allPart;
         speedTime.start();
     }
@@ -305,6 +320,7 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
       progressBar's algorithm should be changed in multi-thread downloading
       */
     this->progressBar->setValue(percentage);
+
     if (bytesReceived == bytesTotal)
     {
         qDebug()<<"finish writing";
@@ -332,11 +348,13 @@ void Task::destructor()
 
 TaskInfo Task::getTaskInfo()
 {
+    qDebug() << "in getTaskInfo";
     TaskInfo info;
     qDebug() << file->fileName();
     info.file = file->fileName();
     info.fileSize = 0;
-    for (int i = 0; i < files.size(); i++) info.fileSize += files[i]->size();
+    if (file->size()) info.fileSize = file->size();
+    else for (int i = 0; i < files.size(); i++) info.fileSize += files[i]->size();
     info.totalSize = this->totalSize;
     info.url = this->url.toString();
     info.threadCount = this->threadCount;
@@ -408,6 +426,7 @@ void Task::allFinished()
     }
     file->close();
     removeTempFiles();
+    qDebug() << "totalSize" << totalSize;
 }
 
 void Task::metaDataChanged(int iPart)

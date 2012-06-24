@@ -19,16 +19,18 @@ QSize Widget::sizeHint() const
 
 Widget::Widget(QWidget *parent): QWidget(parent)
 {
+    this->setWindowTitle(tr("下载管理器"));
     // 界面及读取设置
     mainLayout = new QVBoxLayout(this);
     dm = new DownloadManager(this);
-    QPushButton *addTaskButton = new QPushButton(tr("Add Task"), this);
-    QPushButton *aboutButton = new QPushButton(tr("About"), this);
+    QPushButton *addTaskButton = new QPushButton(tr("新建任务"), this);
+    QPushButton *aboutButton = new QPushButton(tr("关于"), this);
     connect(addTaskButton, SIGNAL(clicked()), this, SLOT(addTask()));
     connect(aboutButton, SIGNAL(clicked()), this, SLOT(showAbout()));
     QWidget *topButtons = new QWidget(this);
     QHBoxLayout *topButtonsLayout = new QHBoxLayout(topButtons);
     topButtonsLayout->addWidget(addTaskButton);
+    topButtonsLayout->addStretch();
     topButtonsLayout->addWidget(aboutButton);
     mainLayout->addWidget(topButtons);
     //this->setLayout(mainLayout);
@@ -119,12 +121,15 @@ void Widget::closeEvent(QCloseEvent *event)
 {
     QList<Task *> tasks = this->findChildren<Task *>();
     qDebug() << tasks.length();
+    qDebug() << "closeEvent";
     QList<Task *>::iterator i;
     TaskInfo taskInfo;
     QList<QVariant> taskInfoList;
      for (i = tasks.begin(); i != tasks.end(); ++i)
      {
+         qDebug() << "in loop";
          taskInfo = (*i)->getTaskInfo();
+         qDebug() << "afterTaskInfo";
          qDebug() << taskInfo.file << taskInfo.url << taskInfo.fileSize << taskInfo.totalSize;
          taskInfoList.append(qVariantFromValue(taskInfo));
      }

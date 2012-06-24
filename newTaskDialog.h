@@ -29,7 +29,7 @@ public:
     QPushButton *ok;
     QPushButton *cancel;
     QStringList saveDir;
-    bool reply;
+    //bool reply;
     QString url, saveFileName, saveDirectory;
     QString saveFile; // 目录+文件名
     QLineEdit *saveFileNameEdit;

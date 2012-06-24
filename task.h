@@ -30,7 +30,7 @@ private:
     DownloadManager *downloadManager;
     QPushButton *startButton, *stopButton, *removeButton;
     QProgressBar *progressBar;
-    QLabel *speedLabel;
+    QLabel *downloadInfoLabel;
 
     qint64 threadCount;
     qint64 prevAllParts;
@@ -57,7 +57,7 @@ private:
     void disconnectAllSignals();
     void disconnectSignals(int iPart);
     void allFinished();
-    void initLayout();
+    void initLayout(QString str);
     void errorMsg(QString str);
     void removeTempFiles();
     void destructor();
