@@ -13,6 +13,10 @@
 #include <QVector>
 #include <QEventLoop>
 #include <QLabel>
+#include <QMenu>
+#include <QContextMenuEvent>
+#include <QApplication>
+#include <QClipboard>
 #include "MyNetworkReply.h"
 #include "downloadmanager.h"
 
@@ -65,7 +69,8 @@ public:
     Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);
     TaskInfo getTaskInfo();
-
+protected:
+    void contextMenuEvent(QContextMenuEvent * event);
 
 private slots:
     void myDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int iPart);
@@ -76,6 +81,10 @@ private slots:
     void error(QNetworkReply::NetworkError code, int iPart);
     void finished(int iPart);
     void metaDataChanged(int iPart);
+    void copyURL();
+signals:
+    void disconnectClipboard();
+    void connectClipboard();
 };
 
 #endif // TASK_H

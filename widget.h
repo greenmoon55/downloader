@@ -19,6 +19,7 @@
 #include <QDropEvent>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QContextMenuEvent>
 
 #include "task.h"
 #include "newTaskDialog.h"
@@ -44,6 +45,7 @@ private slots:
     void addTask();
     void addTask(QClipboard::Mode mode);
     void quit();
+    void connectClipboard();
 };
 
 #endif // WIDGET_H

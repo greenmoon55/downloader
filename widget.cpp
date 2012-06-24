@@ -58,6 +58,7 @@ Widget::Widget(QWidget *parent): QWidget(parent)
             taskInfo = taskInfoList[i].value<TaskInfo>();
             task = new Task(dm, &taskInfo, this);
             tasksLayout->addWidget(task);
+            connect(task, SIGNAL(connectClipboard()), this, SLOT(connectClipboard()));
         }
         tasksLayout->addStretch();
     }
@@ -96,6 +97,7 @@ void Widget::showNewTaskDialog(QString str)
     if (dlg.exec() == QDialog::Accepted)
     {
         Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
+        connect(task, SIGNAL(connectClipboard()), this, SLOT(connectClipboard()));
         tasksLayout->takeAt(tasksLayout->count() - 1);
         tasksLayout->addWidget(task);
         tasksLayout->addStretch();
@@ -158,7 +160,14 @@ void Widget::dropEvent(QDropEvent *event)
     showNewTaskDialog(event->mimeData()->text());
 }
 
+
+
 void Widget::quit()
 {
     this->close();
+}
+
+void Widget::connectClipboard()
+{
+    connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(addTask(QClipboard::Mode)));
 }

@@ -459,3 +459,18 @@ void Task::removeTask()
     // 还要删除这个文件。。
     this->deleteLater();
 }
+
+void Task::contextMenuEvent(QContextMenuEvent * event)
+{
+    QMenu menu;
+    menu.addAction(tr("复制下载链接"), this, SLOT(copyURL()));
+    menu.exec(event->globalPos());
+}
+
+void Task::copyURL()
+{
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->disconnect(); // 暂停监控剪切板
+    clipboard->setText(this->url.toString());
+    emit connectClipboard(); // 恢复监控
+}
