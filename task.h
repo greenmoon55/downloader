@@ -60,6 +60,7 @@ private:
     void initLayout();
     void errorMsg(QString str);
     void removeTempFiles();
+    void destructor();
 public:
     Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);
@@ -71,7 +72,7 @@ private slots:
     //void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void startDownload();
     void stopDownload();
-    void destructor();
+    void removeTask();
     void error(QNetworkReply::NetworkError code, int iPart);
     void finished(int iPart);
     void metaDataChanged(int iPart);

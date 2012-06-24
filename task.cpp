@@ -10,19 +10,24 @@ void Task::errorMsg(QString str)
 void Task::initLayout()
 {
     startButton = new QPushButton("Start", this);
+    QPixmap map;
+    QIcon icon;
+    map.load("../downloader/download.png");
+    icon.addPixmap(map);
+    startButton->setIcon(icon);
     stopButton = new QPushButton("Stop", this);
     removeButton = new QPushButton("Remove", this);
     progressBar = new QProgressBar(this);
     speedLabel = new QLabel(this);
     QHBoxLayout *taskLayout = new QHBoxLayout;
-    taskLayout->addWidget(startButton);
-    taskLayout->addWidget(stopButton);
-    taskLayout->addWidget(removeButton);
-    taskLayout->addWidget(progressBar);
-    taskLayout->addWidget(speedLabel);
+    taskLayout->addWidget(startButton, 0, Qt::AlignLeft);
+    taskLayout->addWidget(stopButton, 0, Qt::AlignLeft);
+    taskLayout->addWidget(removeButton, 0, Qt::AlignLeft);
+    taskLayout->addWidget(progressBar, 1, 0); // fill
+    taskLayout->addWidget(speedLabel, 0, Qt::AlignRight);
     connect(startButton, SIGNAL(clicked()), this, SLOT(startDownload()));
     connect(stopButton, SIGNAL(clicked()), this, SLOT(stopDownload()));
-    connect(removeButton, SIGNAL(clicked()), this, SLOT(destructor()));
+    connect(removeButton, SIGNAL(clicked()), this, SLOT(removeTask()));
     stopButton->setEnabled(false);
     this->setLayout(taskLayout);
 }
@@ -70,6 +75,14 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
     this->totalSize = taskInfo->totalSize;
     this->threadCount = taskInfo->threadCount;
     this->url = taskInfo->url;
+
+    // 下载完了
+    if (totalSize == taskInfo->fileSize)
+    {
+        startButton->setEnabled(false);
+        progressBar->setValue(100);
+        return;
+    }
     file = new QFile(taskInfo->file);
     if (!file->open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
@@ -141,12 +154,15 @@ void Task::startDownload()
     QEventLoop loop;
     QNetworkReply *tmpReply = downloadManager->manager->head(request);
 
-    // 这是什么意思？
     connect(tmpReply, SIGNAL(finished()), &loop, SLOT(quit()), Qt::DirectConnection);
     loop.exec();
     QVariant var = tmpReply->header(QNetworkRequest::ContentLengthHeader);
     delete tmpReply;
     totalSize = var.toLongLong();
+    if (totalSize == 0)
+    {
+        // 不存在
+    }
     qDebug() << "The file size is:" << totalSize;
     if (totalSize == file->size())
     {
@@ -154,7 +170,7 @@ void Task::startDownload()
           remove temp files.
           */
         char buf[256];
-        sprintf(buf, "rm %s.part*", file->fileName().toLatin1().data());
+        sprintf(buf, "rm %s.part*", file->fileName().toUtf8().data());
         system(buf);
         stopButton->setEnabled(false);
         startButton->setEnabled(false);
@@ -242,9 +258,10 @@ void Task::stopDownload()
         replies[i]->reply->abort();
         replies[i]->reply->deleteLater();
         //stopFileSizes[i] = files[i]->size();
+        qDebug() << i << files[i]->size();
     }
-    startButton->setEnabled(true);
     stopButton->setEnabled(false);
+    startButton->setEnabled(true);
 }
 void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPart)
 {
@@ -282,6 +299,7 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
         speedTime.start();
     }
 
+    qDebug() << allPart << totalSize;
     int percentage = allPart*100 / totalSize;
     /**
       progressBar's algorithm should be changed in multi-thread downloading
@@ -352,7 +370,6 @@ void Task::error(QNetworkReply::NetworkError code, int iPart)
     }
     replies.clear();
     removeTempFiles();
-    destructor();
     QMessageBox::warning(this, tr("下载"), replies[iPart]->reply->errorString(), QMessageBox::Ok, QMessageBox::Ok);
 }
 
@@ -415,4 +432,11 @@ void Task::removeTempFiles()
     char buf[256];
     sprintf(buf, "rm %s.part*", file->fileName().toUtf8().data());
     system(buf);
+}
+
+void Task::removeTask()
+{
+    removeTempFiles();
+    // 还要删除这个文件。。
+    this->deleteLater();
 }

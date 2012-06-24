@@ -24,7 +24,7 @@ public:
     QSpinBox *threadCountBox;
     QLineEdit *urlLine;
     QLabel *savePath;
-    QComboBox *savePathBox;
+    QLineEdit *savePathBox;
     QPushButton *browse;
     QPushButton *ok;
     QPushButton *cancel;
@@ -33,6 +33,7 @@ public:
     QString url, saveFileName, saveDirectory;
     QString saveFile; // 目录+文件名
     QLineEdit *saveFileNameEdit;
+    QSize sizeHint() const;
 private slots:
     void on_Browse_clicked();
     void on_ok_clicked();
