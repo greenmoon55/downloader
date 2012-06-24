@@ -71,6 +71,8 @@ Task::Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 thre
         }
     }
     this->url = url;
+    //this->setToolTip(url.host());
+    this->setToolTip(url.toString());
     this->totalSize = 0;
 }
 
@@ -83,6 +85,8 @@ Task::Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent
     this->totalSize = taskInfo->totalSize;
     this->threadCount = taskInfo->threadCount;
     this->url = taskInfo->url;
+    //this->setToolTip(url.host());
+    this->setToolTip(url.toString());
 
     file = new QFile(taskInfo->file);
 
