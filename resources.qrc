@@ -1,5 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
  <qresource>
      <file>download.png</file>
+     <file>pause.png</file>
+     <file>delete.png</file>
  </qresource>
  </RCC>

@@ -46,6 +46,7 @@ private slots:
     void addTask(QClipboard::Mode mode);
     void quit();
     void connectClipboard();
+    void allBegin();
 };
 
 #endif // WIDGET_H

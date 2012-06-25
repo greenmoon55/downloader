@@ -9,14 +9,20 @@ void Task::errorMsg(QString str)
 // 初始化布局
 void Task::initLayout(QString fileName)
 {
-    startButton = new QPushButton("Start", this);
-    QPixmap map;
-    QIcon icon;
-    map.load("../downloader/download.png");
-    icon.addPixmap(map);
-    startButton->setIcon(icon);
-    stopButton = new QPushButton("Stop", this);
-    removeButton = new QPushButton("Remove", this);
+    QPixmap map1, map2, map3;
+    QIcon icon1, icon2, icon3;
+    map1.load(":/download.png");
+    icon1.addPixmap(map1);
+    map2.load(":/pause.png");
+    icon2.addPixmap(map2);
+    map3.load(":/delete.png");
+    icon3.addPixmap(map3);
+    startButton = new QPushButton(tr("开始"), this);
+    startButton->setIcon(icon1);
+    stopButton = new QPushButton(tr("停止"), this);
+    stopButton->setIcon(icon2);
+    removeButton = new QPushButton(tr("删除"), this);
+    removeButton->setIcon(icon3);
     progressBar = new QProgressBar(this);
     //speedLabel = new QLabel(this);
     QHBoxLayout *taskLayout = new QHBoxLayout;
@@ -410,6 +416,7 @@ void Task::allFinished()
       合并文件
       */
     qDebug() << "all finished";
+    this->downloadInfoLabel->setText(tr("下载完成"));
     startButton->setEnabled(false);
     stopButton->setEnabled(false);
     this->progressBar->setValue(100);
@@ -461,8 +468,13 @@ void Task::removeTempFiles()
 
 void Task::removeTask()
 {
+    if (totalSize != this->file->size() || (totalSize==0 && totalSize==0))
+    {
+        char buf[256];
+        sprintf(buf, "rm %s", file->fileName().toUtf8().data());
+        system(buf);
+    }
     removeTempFiles();
-    // 还要删除这个文件。。
     this->deleteLater();
 }
 

@@ -25,11 +25,15 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     dm = new DownloadManager(this);
     QPushButton *addTaskButton = new QPushButton(tr("新建任务"), this);
     QPushButton *aboutButton = new QPushButton(tr("关于"), this);
+    QPushButton *allBeginButton = new QPushButton(tr("全部开始"), this);
     connect(addTaskButton, SIGNAL(clicked()), this, SLOT(addTask()));
-    connect(aboutButton, SIGNAL(clicked()), this, SLOT(showAbout()));
+    connect(aboutButton, SIGNAL(clicked()), this, SLOT(showAbout()));    
+    connect(allBeginButton, SIGNAL(clicked()), this, SLOT(allBegin()));
+
     QWidget *topButtons = new QWidget(this);
     QHBoxLayout *topButtonsLayout = new QHBoxLayout(topButtons);
     topButtonsLayout->addWidget(addTaskButton);
+    topButtonsLayout->addWidget(allBeginButton);
     topButtonsLayout->addStretch();
     topButtonsLayout->addWidget(aboutButton);
     mainLayout->addWidget(topButtons);
@@ -96,7 +100,7 @@ void Widget::showNewTaskDialog(QString str)
     dlg.urlLine->setText(str);
     if (dlg.exec() == QDialog::Accepted)
     {
-        Task *task = new Task(dm, dlg.url, dlg.saveFile, 5, this); // 暂时定为5块
+        Task *task = new Task(dm, dlg.url, dlg.saveFile, dlg.threadCountBox->value(), this); // 暂时定为5块
         connect(task, SIGNAL(connectClipboard()), this, SLOT(connectClipboard()));
         tasksLayout->takeAt(tasksLayout->count() - 1);
         tasksLayout->addWidget(task);
@@ -145,7 +149,8 @@ void Widget::closeEvent(QCloseEvent *event)
 void Widget::showAbout()
 {
     QMessageBox m;
-    m.setText(tr("About"));
+    m.setWindowTitle(tr("下载管理器"));
+    m.setText(tr("下载管理器V1.1\n作者：董金、辛田、杨柳杉、段兆宇"));
     m.exec();
 }
 
@@ -160,8 +165,6 @@ void Widget::dropEvent(QDropEvent *event)
     showNewTaskDialog(event->mimeData()->text());
 }
 
-
-
 void Widget::quit()
 {
     this->close();
@@ -170,4 +173,16 @@ void Widget::quit()
 void Widget::connectClipboard()
 {
     connect(clipboard, SIGNAL(changed(QClipboard::Mode)), this, SLOT(addTask(QClipboard::Mode)));
+}
+
+void Widget::allBegin()
+{
+    QList<Task *> tasks = this->findChildren<Task *>();
+    qDebug() << "allBegin";
+    QList<Task *>::iterator i;
+     for (i = tasks.begin(); i != tasks.end(); ++i)
+     {
+       (*i)->startDownload();
+     }
+    qDebug() << "allBegin";
 }

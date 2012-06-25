@@ -30,7 +30,9 @@ HEADERS  += \
     MyNetworkReply.h
 
 OTHER_FILES += \
-    download.png
+    download.png \
+    pause.png \
+    delete.png
 
 RESOURCES += \
     resources.qrc

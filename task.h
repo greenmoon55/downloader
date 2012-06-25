@@ -73,11 +73,11 @@ public:
     TaskInfo getTaskInfo();
 protected:
     void contextMenuEvent(QContextMenuEvent * event);
-
+public slots:
+    void startDownload();
 private slots:
     void myDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int iPart);
     //void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void startDownload();
     void stopDownload();
     void removeTask();
     void error(QNetworkReply::NetworkError code, int iPart);
