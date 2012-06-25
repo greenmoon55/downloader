@@ -65,6 +65,8 @@ private:
     void errorMsg(QString str);
     void removeTempFiles();
     void destructor();
+    QString showSize(int bytes);
+    QString showSpeed(int bytes);
 public:
     Task(DownloadManager *downloadManager, QUrl url, QString path, qint64 threadCount, QWidget *parent = 0);
     Task(DownloadManager *downloadManager, TaskInfo *taskInfo, QWidget *parent = 0);

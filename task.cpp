@@ -178,6 +178,9 @@ void Task::startDownload()
     if (totalSize == 0)
     {
         // 不存在
+        errorMsg("无法获取文件");
+        startButton->setEnabled(true);
+        return;
     }
     qDebug() << "The file size is:" << totalSize;
     if (totalSize == file->size())
@@ -263,6 +266,7 @@ void Task::startDownload()
 }
 void Task::stopDownload()
 {
+    stopButton->setEnabled(false);
     qDebug() << "stopDownload()";
 
     // disconnect the signal/slot so we don't get any error signal and mess with our error handling code
@@ -276,7 +280,6 @@ void Task::stopDownload()
         //stopFileSizes[i] = files[i]->size();
         qDebug() << i << files[i]->size();
     }
-    stopButton->setEnabled(false);
     startButton->setEnabled(true);
 }
 void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPart)
@@ -310,19 +313,19 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
     if (speedTime.elapsed() > 2000)
     {
         qDebug() << "time elapsed" << speedTime.elapsed();
-        speed = (allPart-prevAllParts)/speedTime.elapsed();
+        speed = (allPart - prevAllParts)/speedTime.elapsed();
         //this->speedLabel->setText(QString::number(speed) + "KB/s");
-        this->downloadInfoLabel->setText(QString::number(allPart) + "of" +
-                                 QString::number(this->totalSize) + " " + QString::number(speed) + "KB/s");
+        /*
+        this->downloadInfoLabel->setText(QString::number(allPart/1000) + "KB / " +
+                                 QString::number(this->totalSize/1000) + "KB " + QString::number(speed) + "KB/s");
+                                 */
+        this->downloadInfoLabel->setText(showSize(allPart) + "/" + showSize(totalSize) + " " + showSpeed(speed));
         prevAllParts = allPart;
         speedTime.start();
     }
 
-    qDebug() << allPart << totalSize;
+    //qDebug() << allPart << totalSize;
     int percentage = allPart*100 / totalSize;
-    /**
-      progressBar's algorithm should be changed in multi-thread downloading
-      */
     this->progressBar->setValue(percentage);
 
     if (bytesReceived == bytesTotal)
@@ -331,7 +334,7 @@ void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPar
         files[iPart]->write(replies[iPart]->reply->readAll());
         finisheds[iPart] = true;
         bool allfinished = true;
-        for (int i=0; i<finisheds.size(); i++)
+        for (int i = 0; i < finisheds.size(); i++)
         {
             if (finisheds[i] == false)
             {
@@ -379,7 +382,6 @@ void Task::disconnectAllSignals()
         disconnect(replies[i], SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
         disconnect(replies[i], SIGNAL(myDownloadProgress(qint64,qint64,int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
         disconnect(replies[i], SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
-
     }
 }
 
@@ -477,4 +479,20 @@ void Task::copyURL()
     clipboard->disconnect(); // 暂停监控剪切板
     clipboard->setText(this->url.toString());
     emit connectClipboard(); // 恢复监控
+}
+
+QString Task::showSize(int bytes)
+{
+    qDebug() << bytes / 1e9;
+    if (bytes / 1000000000 > 0) return QString::number(bytes / 1000000000) + "GB";
+    if (bytes / 1000000 > 0) return QString::number(bytes / 1000000) + "MB";
+    if (bytes / 1000 > 0) return QString::number(bytes / 1000) + "KB";
+    else return QString::number(bytes) + "bytes";
+}
+
+QString Task::showSpeed(int bytes)
+{
+    qDebug() << bytes;
+    if (bytes / 1000 > 0) return QString::number(bytes / 1000) + "MB/s";
+    else return QString::number(bytes) + "KB/s";
 }
