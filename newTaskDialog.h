@@ -38,6 +38,7 @@ private slots:
     void on_Browse_clicked();
     void on_ok_clicked();
     void on_cancel_clicked();
+    void autoCompleteFileName(QString str);
 };
 
 #endif // newTaskDialog_H

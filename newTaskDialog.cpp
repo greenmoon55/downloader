@@ -56,6 +56,8 @@ newTaskDialog::newTaskDialog(QWidget *parent): QDialog(parent)
     connect(browse,SIGNAL(clicked()),this,SLOT(on_Browse_clicked()));
     connect(ok,SIGNAL(clicked()),this,SLOT(on_ok_clicked()));
     connect(cancel,SIGNAL(clicked()),this,SLOT(on_cancel_clicked()));
+
+    connect(urlLine, SIGNAL(textChanged(QString)), this, SLOT(autoCompleteFileName(QString)));
 }
 void newTaskDialog::on_Browse_clicked()
 {
@@ -121,4 +123,10 @@ void newTaskDialog::on_cancel_clicked()
 QSize newTaskDialog::sizeHint() const
 {
     return QSize(500, 200);
+}
+
+void newTaskDialog::autoCompleteFileName(QString str)
+{
+    QStringList list = str.split("/");
+    this->saveFileNameEdit->setText(list.last());
 }

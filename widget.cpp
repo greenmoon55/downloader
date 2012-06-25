@@ -26,9 +26,12 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     QPushButton *addTaskButton = new QPushButton(tr("新建任务"), this);
     QPushButton *aboutButton = new QPushButton(tr("关于"), this);
     QPushButton *allBeginButton = new QPushButton(tr("全部开始"), this);
+    QPushButton *allPauseButton = new QPushButton(tr("全部暂停"));
     connect(addTaskButton, SIGNAL(clicked()), this, SLOT(addTask()));
     connect(aboutButton, SIGNAL(clicked()), this, SLOT(showAbout()));    
     connect(allBeginButton, SIGNAL(clicked()), this, SLOT(allBegin()));
+    connect(allPauseButton, SIGNAL(clicked()), this, SLOT(allPause()));
+
 
     QWidget *topButtons = new QWidget(this);
     QHBoxLayout *topButtonsLayout = new QHBoxLayout(topButtons);
@@ -36,6 +39,7 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     topButtonsLayout->addWidget(allBeginButton);
     topButtonsLayout->addStretch();
     topButtonsLayout->addWidget(aboutButton);
+    topButtonsLayout->addWidget(allPauseButton);
     mainLayout->addWidget(topButtons);
     //this->setLayout(mainLayout);
 
@@ -182,7 +186,23 @@ void Widget::allBegin()
     QList<Task *>::iterator i;
      for (i = tasks.begin(); i != tasks.end(); ++i)
      {
-       (*i)->startDownload();
+         if((*i)->startButton->isEnabled())
+              (*i)->startDownload();
      }
     qDebug() << "allBegin";
+}
+void Widget::allPause()
+{
+
+    QList<Task *> tasks = this->findChildren<Task *>();
+    qDebug() << "allPause";
+    QList<Task *>::iterator i;
+     for (i = tasks.begin(); i != tasks.end(); ++i)
+     {
+         qDebug() << "task i";
+         if((*i)->stopButton->isEnabled())
+             (*i)->stopDownload();
+     }
+    qDebug() << "allPause";
+
 }

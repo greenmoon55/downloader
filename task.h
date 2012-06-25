@@ -32,7 +32,9 @@ class Task: public QWidget
     Q_OBJECT
 private:
     DownloadManager *downloadManager;
+public:
     QPushButton *startButton, *stopButton, *removeButton;
+private:
     QProgressBar *progressBar;
     QLabel *downloadInfoLabel;
 
@@ -75,10 +77,10 @@ protected:
     void contextMenuEvent(QContextMenuEvent * event);
 public slots:
     void startDownload();
+    void stopDownload();
 private slots:
     void myDownloadProgress(qint64 bytesReceived, qint64 bytesTotal, int iPart);
     //void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void stopDownload();
     void removeTask();
     void error(QNetworkReply::NetworkError code, int iPart);
     void finished(int iPart);

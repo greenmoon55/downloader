@@ -47,6 +47,7 @@ private slots:
     void quit();
     void connectClipboard();
     void allBegin();
+    void allPause();
 };
 
 #endif // WIDGET_H
