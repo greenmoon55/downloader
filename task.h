@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QUrl>
 #include <QTime>
+#include <QTimer>
 #include <QMetaType>
 #include <QIODevice>
 #include <QMessageBox>
@@ -41,6 +42,7 @@ private:
     qint64 threadCount;
     qint64 prevAllParts;
     QTime speedTime;
+    QTimer getsizeTimer;
     QVector<QTime> shortTimes;
     //QTime shortTime;
     QUrl url;
@@ -86,6 +88,7 @@ private slots:
     void finished(int iPart);
     void metaDataChanged(int iPart);
     void copyURL();
+    void getsizeTimeout();
 signals:
     void disconnectClipboard();
     void connectClipboard();

@@ -177,7 +177,11 @@ void Task::startDownload()
     QNetworkReply *tmpReply = downloadManager->manager->head(request);
 
     connect(tmpReply, SIGNAL(finished()), &loop, SLOT(quit()), Qt::DirectConnection);
+    getsizeTimer.start(5000);
+    connect(&getsizeTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+    connect(&getsizeTimer, SIGNAL(timeout()), this, SLOT(getsizeTimeout()));
     loop.exec();
+    disconnect(&getsizeTimer, SIGNAL(timeout()), this, SLOT(getsizeTimeout()));
     QVariant var = tmpReply->header(QNetworkRequest::ContentLengthHeader);
     delete tmpReply;
     totalSize = var.toLongLong();
@@ -220,51 +224,95 @@ void Task::startDownload()
     QVector<QByteArray> rangeHeaderValues;
     QVector<QNetworkRequest> requests;
 
-    // 我整理了一下这里的循环
-    if (threadCount == 1)
-    {
-        rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[0]) + "-");
-        qDebug()<<"single thread";
-        qDebug()<<"fileSizes[0]==" << fileSizes[0];
-    }
-    else
-    {
-        // i == 0
-        rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[0]) + "-" + QByteArray::number(rangeValues[0]));
-        qDebug()<<"fileSizes[0]==" << fileSizes[0];
-        qDebug()<<"rangeValues[0]==" << rangeValues[0];
-
-        /**
-          如果不是最后一个线程，从rangeValues中读取数据来setRawHeader
-          如果是的话，下载到最后一个字节。
-          */
-        for (int i = 1; i < threadCount - 1; i++)
-        {
-            rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i-1]+fileSizes[i]+1) + "-" + QByteArray::number(rangeValues[i]));
-            qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
-            qDebug()<<"rangeValues["<<i<<"]==" << rangeValues[i];
+        for (int i=0; i<threadCount; i++)
+        { /**
+    如果不是最后一个线程，从rangeValues中读取数据来setRawHeader
+    如果是的话，下载到最后一个字节。
+    */
+            if (i==0&&threadCount!=1){//not single thread first thread
+                rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[i]) + "-" + QByteArray::number(rangeValues[i]));
+                qDebug()<<"fileSizes[0]==" << fileSizes[0];
+                qDebug()<<"rangeValues[0]==" << rangeValues[0];
+            }
+            else if (i != threadCount-1){
+                rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i-1]+fileSizes[i]+1) + "-" + QByteArray::number(rangeValues[i]));
+                qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
+                qDebug()<<"rangeValues["<<i<<"]==" << rangeValues[i];
+            }
+            else{
+                if (i == 0){//单线程
+                    rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[0]) + "-");
+                    qDebug()<<"single thread";
+                    qDebug()<<"fileSizes[0]==" << fileSizes[0];
+                }
+                else{//Last one thread of all threads.
+                    rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i-1]+fileSizes[i]+1) + "-");
+                    qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
+                }
+            }
+            QNetworkRequest tmpRequest(url);
+            requests.push_back(tmpRequest);
+            requests.last().setRawHeader("Range", rangeHeaderValues.last());
+            MyNetworkReply *tempReply = new MyNetworkReply(i, downloadManager->newDownload(requests.last()));
+            replies.push_back(tempReply);
+            connect(replies.last(), SIGNAL(myDownloadProgress(qint64, qint64, int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
+            connect(replies.last(), SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
+            connect(replies.last(), SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
+            connect(replies.last(), SIGNAL(finished(int)), this, SLOT(finished(int)));
+            shortTimes[i].start();
         }
+//    // 我整理了一下这里的循环
+//    if (threadCount == 1)
+//    {
+//        rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[0]) + "-");
+//        qDebug()<<"single thread";
+//        qDebug()<<"fileSizes[0]==" << fileSizes[0];
+//    }
+//    else
+//    {
+//        // i == 0
+//        rangeHeaderValues.push_back("bytes="+QByteArray::number(fileSizes[0]) + "-" + QByteArray::number(rangeValues[0]));
+//        qDebug()<<"fileSizes[0]==" << fileSizes[0];
+//        qDebug()<<"rangeValues[0]==" << rangeValues[0];
 
-        int i = threadCount - 1;
-        rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i - 1]+fileSizes[i]+1) + "-");
-        qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
-    }
+//        /**
+//          如果不是最后一个线程，从rangeValues中读取数据来setRawHeader
+//          如果是的话，下载到最后一个字节。
+//          */
+//        for (int i = 1; i < threadCount - 1; i++)
+//        {
+//            rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i-1]+fileSizes[i]+1) + "-" + QByteArray::number(rangeValues[i]));
+//            qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
+//            qDebug()<<"rangeValues["<<i<<"]==" << rangeValues[i];
+//        }
 
-    for (int i = 0; i < threadCount; i++)
-    {
-        QNetworkRequest tmpRequest(url);
-        requests.push_back(tmpRequest);
-        requests.last().setRawHeader("Range", rangeHeaderValues[i]);
-        MyNetworkReply *tempReply = new MyNetworkReply(i, downloadManager->newDownload(requests[i]));
-        replies.push_back(tempReply);
-        connect(replies.last(), SIGNAL(myDownloadProgress(qint64, qint64, int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
-        connect(replies.last(), SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
-        connect(replies.last(), SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
-        connect(replies.last(), SIGNAL(finished(int)), this, SLOT(finished(int)));
-        shortTimes[i].start();
-    }
+//        int i = threadCount - 1;
+//        rangeHeaderValues.push_back("bytes="+QByteArray::number(rangeValues[i - 1]+fileSizes[i]+1) + "-");
+//        qDebug()<<"fileSizes["<<i<<"]==" << fileSizes[i];
+//    }
+
+//    for (int i = 0; i < threadCount; i++)
+//    {
+//        QNetworkRequest tmpRequest(url);
+//        requests.push_back(tmpRequest);
+//        requests.last().setRawHeader("Range", rangeHeaderValues[i]);
+//        MyNetworkReply *tempReply = new MyNetworkReply(i, downloadManager->newDownload(requests[i]));
+//        replies.push_back(tempReply);
+//        connect(replies.last(), SIGNAL(myDownloadProgress(qint64, qint64, int)), this, SLOT(myDownloadProgress(qint64,qint64,int)));
+//        connect(replies.last(), SIGNAL(metaDataChanged(int)), this, SLOT(metaDataChanged(int)));
+//        connect(replies.last(), SIGNAL(error(QNetworkReply::NetworkError,int)), this, SLOT(error(QNetworkReply::NetworkError,int)));
+//        connect(replies.last(), SIGNAL(finished(int)), this, SLOT(finished(int)));
+//        shortTimes[i].start();
+//    }
 
 
+
+
+//    QTimer tmpTimer;
+//    QEventLoop rloop;
+//    tmpTimer.start(1000);
+//    connect(&tmpTimer, SIGNAL(timeout()), &rloop, SLOT(quit()));
+//    rloop.exec();
     stopButton->setEnabled(true);
 //    qDebug()<<"startDownload"<<endl;
 
@@ -286,6 +334,11 @@ void Task::stopDownload()
         //stopFileSizes[i] = files[i]->size();
         qDebug() << i << files[i]->size();
     }
+//    QTimer tmpTimer;
+//    QEventLoop loop;
+//    tmpTimer.start(1000);
+//    connect(&tmpTimer, SIGNAL(timeout()), &loop, SLOT(quit()));
+//    loop.exec();
     startButton->setEnabled(true);
 }
 void Task::myDownloadProgress (qint64 bytesReceived, qint64 bytesTotal, int iPart)
@@ -407,7 +460,7 @@ void Task::finished(int iPart)
 {
     qDebug() << "finished" << iPart;
     files[iPart]->write(replies[iPart]->reply->readAll()); // 不能省略
-
+    this->stopButton->setEnabled(false);
     this->disconnectSignals(iPart);
 }
 void Task::allFinished()
@@ -507,4 +560,8 @@ QString Task::showSpeed(int bytes)
     qDebug() << bytes;
     if (bytes / 1000 > 0) return QString::number(bytes / 1000) + "MB/s";
     else return QString::number(bytes) + "KB/s";
+}
+void Task::getsizeTimeout()
+{
+
 }

@@ -1,4 +1,5 @@
-#include "base64.h" //支持迅雷 快车 QQ
+#include "base64.h"
+// 支持迅雷 快车 旋风专用链
 // www.pc6.com可以用来测试
 
 base64::base64()

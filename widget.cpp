@@ -37,9 +37,9 @@ Widget::Widget(QWidget *parent): QWidget(parent)
     QHBoxLayout *topButtonsLayout = new QHBoxLayout(topButtons);
     topButtonsLayout->addWidget(addTaskButton);
     topButtonsLayout->addWidget(allBeginButton);
+    topButtonsLayout->addWidget(allPauseButton);
     topButtonsLayout->addStretch();
     topButtonsLayout->addWidget(aboutButton);
-    topButtonsLayout->addWidget(allPauseButton);
     mainLayout->addWidget(topButtons);
     //this->setLayout(mainLayout);
 
